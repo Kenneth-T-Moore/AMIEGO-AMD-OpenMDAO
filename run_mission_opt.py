@@ -6,6 +6,8 @@ import os
 from prob_11_2 import allocation_data
 from amd_om.allocation.airline_networks.general_allocation_data import general_allocation_data
 
+from amd_om.mission_analysis.components.aerodynamics.simple_aerodynamics import SimpleAerodynamics
+from amd_om.mission_analysis.components.propulsion.simple_propulsion import SimplePropulsion
 from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
 from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitude, plot_single_mission_data
@@ -33,31 +35,23 @@ Mach_mode = 'TAS'
 propulsion_model = get_prop_smt_model()
 aerodynamics_model = get_aero_smt_model()
 
+# propulsion_model = SimplePropulsion()
+# aerodynamics_model = SimpleAerodynamics()
+
 xt, yt, xlimits = get_rans_crm_wing()
 aerodynamics_model.xt = xt
 
 num_routes = allocation_data['num']
 num_existing_aircraft = allocation_data['num_existing']
 
-comm = MPI.COMM_WORLD
-num_procs = comm.size
-iproc = comm.rank
-
-assert num_procs == num_routes, 'must run with num_procs = num_routes'
-split_comm = comm.Split(color=iproc)
-
-# A hack to make parallel optimizations work
-MPI.COMM_WORLD = split_comm
-
-mission_index = iproc
-
-num_control_points = int(allocation_data['num_cp'][mission_index])
-num_points = int(allocation_data['num_pt'][mission_index])
-range_1e3_km = allocation_data['range_km'][mission_index] / 1.e3
-output_data_filename = 'optimum_msn_{:03}.pkl'.format(mission_index)
-perform_mission_opt(CLt, CDt, output_dir, output_data_filename, comm=split_comm,
-    num_control_points=num_control_points, num_points=num_points, range_1e3_km=range_1e3_km,
-    ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Wpax_N=Wpax_N, Mach_mode=Mach_mode,
-    mission_index=mission_index, num_existing_aircraft=num_existing_aircraft,
-    propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
-)
+for mission_index in range(num_routes):
+    num_control_points = int(allocation_data['num_cp'][mission_index])
+    num_points = int(allocation_data['num_pt'][mission_index])
+    range_1e3_km = allocation_data['range_km'][mission_index] / 1.e3
+    output_data_filename = 'optimum_msn_{:03}.pkl'.format(mission_index)
+    perform_mission_opt(CLt, CDt, output_dir, output_data_filename, comm=None,
+        num_control_points=num_control_points, num_points=num_points, range_1e3_km=range_1e3_km,
+        ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Wpax_N=Wpax_N, Mach_mode=Mach_mode,
+        mission_index=mission_index, num_existing_aircraft=num_existing_aircraft,
+        propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+    )
