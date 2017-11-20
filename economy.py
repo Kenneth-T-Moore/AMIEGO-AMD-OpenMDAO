@@ -99,7 +99,7 @@ class RevenueManager(ExplicitComponent):
         self.add_input('revenue:y2', shape=(num_routes, ))
         self.add_input('revenue:z1', shape=(num_routes, ))
 
-        self.add_input('flt_day', shape=(num_routes, num_aircraft))
+        self.add_input('flt_day', shape=(num_aircraft, num_routes))
 
         self.add_output('pax_flt', shape=(num_routes, num_aircraft))
         self.add_output('revenue', shape=(num_routes, ))
@@ -141,7 +141,7 @@ class RevenueManager(ExplicitComponent):
         beta = self.beta
 
         # Total number of seats available per day for a route.
-        max_avail_seats = seats.dot(trip.T)
+        max_avail_seats = seats.dot(trip)
 
         # Main Revenue calculation.
         rev = np.zeros((num_routes, ))
@@ -154,7 +154,7 @@ class RevenueManager(ExplicitComponent):
                                                          max_avail_seats[jj])
                 rev[jj] = rev_j
                 for kk in range(num_ac):
-                    x_kj = trip[jj, kk]
+                    x_kj = trip[kk, jj]
                     if x_kj > 0:
                         pax[jj, kk] = min(seats[kk], seats[kk]*totnacc_j/max_avail_seats[jj])
             else:
@@ -185,7 +185,7 @@ class Profit(ExplicitComponent):
         self.add_input('revenue', shape=(num_routes, ))
         self.add_input('pax_flt', shape=(num_routes, num_aircraft))
         self.add_input('tot_pax', shape=(num_routes, ))
-        self.add_input('flt_day', shape=(num_routes, num_aircraft))
+        self.add_input('flt_day', shape=(num_aircraft, num_routes))
 
         # Fuelburn inputs
         for ind_nac in range(num_new_aircraft):
@@ -243,7 +243,6 @@ class Profit(ExplicitComponent):
         pax = inputs['pax_flt']
         tot_pax = inputs['tot_pax']
         cost_fuel_N = self.metadata['general_allocation_data']['cost_fuel_N']
-        FPperlb = cost_fuel_N/6.84
 
         cost = 0.0
         g_aircraft_new = np.zeros((num_new_aircraft, ))
@@ -254,7 +253,7 @@ class Profit(ExplicitComponent):
             name = allocation_data['new_names'][ind_nac]
             con_val = 0.0
             for jj in range(num_routes):
-                x_kj = trip[jj, ind_nac]
+                x_kj = trip[ind_nac, jj]
                 if x_kj > 0:
                     blocktime_name = self._get_blocktime_name(jj, ind_nac=ind_nac)
                     BH_kj = inputs[blocktime_name]
@@ -262,16 +261,17 @@ class Profit(ExplicitComponent):
 
                     MH_FH_kj = allocation_data['maint', name]
                     fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
-                    fuel_kj = inputs[fuelburn_name] * 1e6
-                    cost_kj = allocation_data['cost_other', name][jj] + cost_fuel_N*fuel_kj
+                    fuel_kj = inputs[fuelburn_name]
+                    cost_kj = allocation_data['cost_other', name][jj]
+                    print('cost', cost_kj)
 
                 else:
                     cost_kj = 0.0
                     BH_kj=0.0
                     MH_FH_kj = 0.0
 
-                cost += (cost_kj + fuel_kj*FPperlb)*x_kj
-                con_val += x_kj*(BH_kj*(1.0+MH_FH_kj) + 1.0)
+                cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+                con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
             g_aircraft_new[ind_nac] = (con_val/(12.0*allocation_data['number', name]))
 
@@ -281,21 +281,22 @@ class Profit(ExplicitComponent):
             name = allocation_data['existing_names'][ind_ac]
             con_val = 0.0
             for jj in range(num_routes):
-                x_kj = trip[jj, kk]
+                x_kj = trip[kk, jj]
                 if x_kj > 0:
                     LF = int(round(10.0*pax[jj, kk]/allocation_data['capacity', name]))
                     ##TODO #This convention is different in matlab version (3D): dim1-routes,dim2-aircraft, dim3-LF
-                    cost_kj = allocation_data['TotCost_LF'][kk-1, jj, LF-1]
-                    BH_kj = allocation_data['BH_LF'][kk-1, jj, LF-1]
+                    cost_kj = allocation_data['TotCost_LF'][ind_ac, jj, LF-1]
+                    BH_kj = allocation_data['BH_LF'][ind_ac, jj, LF-1]
                     MH_FH_kj = allocation_data['maint', name]
-                    fuel_kj = allocation_data['fuelburn_LF'][kk-1, jj, LF-1]
+                    fuel_kj = allocation_data['fuelburn_LF'][ind_ac, jj, LF-1]
+                    print('cost', cost_kj)
                 else:
                     cost_kj = 0.0
                     BH_kj=0.0
                     MH_FH_kj = 0.0
 
-                cost += (cost_kj + fuel_kj*FPperlb)*x_kj
-                con_val += x_kj*(BH_kj*(1.0+MH_FH_kj) + 1.0)
+                cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+                con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
             g_aircraft_exist[ind_ac] = (con_val/(12.0*allocation_data['number', name]))
 
@@ -309,7 +310,7 @@ if __name__ == '__main__':
     from openmdao.api import Problem, Group, IndepVarComp
 
     from prob_11_2_updated import allocation_data
-    from amd_om.allocation.airline_networks.general_allocation_data import general_allocation_data
+    from prob_11_2_general_allocation import general_allocation_data
 
     prob = Problem()
     prob.model = model = Group()
@@ -318,6 +319,8 @@ if __name__ == '__main__':
     for j in range(11):
         dd.add_output('{}_blocktime_hr'.format(j), 1.0)
         dd.add_output('{}_fuelburn_1e6_N'.format(j), 1.0)
+
+    model.add_subsystem('p_flt', IndepVarComp('flt_day', val=allocation_data['flt_day'] ))
 
     model.add_subsystem('revenue', RevenueManager(general_allocation_data=general_allocation_data,
                                                   allocation_data=allocation_data),

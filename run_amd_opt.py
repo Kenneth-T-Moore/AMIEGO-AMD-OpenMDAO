@@ -3,7 +3,7 @@ import pickle
 import os
 
 from prob_11_2_updated import allocation_data
-from amd_om.allocation.airline_networks.general_allocation_data import general_allocation_data
+from prob_11_2_general_allocation import general_allocation_data
 from amd_om.allocation_mission import AllocationMissionGroup
 
 from amd_om.design.utils.flight_conditions import get_flight_conditions
