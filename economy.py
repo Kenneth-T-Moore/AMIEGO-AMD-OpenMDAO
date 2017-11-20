@@ -199,6 +199,7 @@ class Profit(ExplicitComponent):
                 blocktime_name = self._get_blocktime_name(ind_rt, ind_nac=ind_nac)
                 self.add_input(blocktime_name)
 
+        self.add_output('profit', val=0.0)
         self.add_output('g_aircraft_new', shape=(num_new_aircraft, ))
         self.add_output('g_aircraft_exist', shape=(num_existing_aircraft, ))
         self.add_output('g_demand', shape=(num_routes, ))
@@ -240,14 +241,13 @@ class Profit(ExplicitComponent):
         trip = inputs['flt_day']
         rev = inputs['revenue']
         pax = inputs['pax_flt']
+        tot_pax = inputs['tot_pax']
         cost_fuel_N = self.metadata['general_allocation_data']['cost_fuel_N']
         FPperlb = cost_fuel_N/6.84
 
-        profit = 0.0
         cost = 0.0
         g_aircraft_new = np.zeros((num_new_aircraft, ))
         g_aircraft_exist = np.zeros((num_existing_aircraft, ))
-        g_demand = np.zeros((num_routes, ))
 
         #New aircraft
         for ind_nac in range(num_new_aircraft):
@@ -263,7 +263,7 @@ class Profit(ExplicitComponent):
                     MH_FH_kj = allocation_data['maint', name]
                     fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
                     fuel_kj = inputs[fuelburn_name] * 1e6
-                    cost_kj = allocation_data['cost_other', name] + cost_fuel_N*fuel_kj
+                    cost_kj = allocation_data['cost_other', name][jj] + cost_fuel_N*fuel_kj
 
                 else:
                     cost_kj = 0.0
@@ -299,18 +299,11 @@ class Profit(ExplicitComponent):
 
             g_aircraft_exist[ind_ac] = (con_val/(12.0*allocation_data['number', name]))
 
+        outputs['profit'] = (np.sum(rev) - cost)/-1.0e3
+        outputs['g_demand'] = tot_pax/allocation_data['demand']
+        outputs['g_aircraft_new'] = g_aircraft_new
+        outputs['g_aircraft_exist'] = g_aircraft_exist
 
-        #for jj in range(num_route):
-            #cc += 1
-            #g[cc] = tot_pax[jj]/dem[jj]
-
-        #profit = np.sum(rev) - cost
-
-"""
-    # print("obj", profit/-1.0e3)
-    # print("con", g)
-    return profit/-1.0e3, g
-"""
 
 if __name__ == '__main__':
     from openmdao.api import Problem, Group, IndepVarComp
@@ -350,6 +343,15 @@ if __name__ == '__main__':
 
 
     prob.run()
+    print('Revenue')
+    print('---------')
     print('pax_flt', prob['pax_flt'])
     print('revenue', prob['revenue'])
     print('tot_pax', prob['tot_pax'])
+
+    print('Profit/Con')
+    print('------------')
+    print('profit', prob['profit'])
+    print('g_demand', prob['g_demand'])
+    print('g_aircraft_new', prob['g_aircraft_new'])
+    print('g_aircraft_exist', prob['g_aircraft_exist'])
