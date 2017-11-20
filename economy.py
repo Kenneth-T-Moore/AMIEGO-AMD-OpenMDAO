@@ -103,6 +103,7 @@ class RevenueManager(ExplicitComponent):
 
         self.add_output('pax_flt', shape=(num_routes, num_aircraft))
         self.add_output('revenue', shape=(num_routes, ))
+        self.add_output('tot_pax', shape=(num_routes, ))
 
         # TODO: Really would be better with anaytic derivs.
         self.declare_partials(of='*', wrt='*', method='fd')
@@ -144,7 +145,7 @@ class RevenueManager(ExplicitComponent):
         # Main Revenue calculation.
         rev = np.zeros((num_routes, ))
         pax = np.zeros((num_routes, num_ac))
-        tot_pax = np.empty((num_routes, 1))
+        tot_pax = np.empty((num_routes, ))
         for jj in range(num_routes):
             if max_avail_seats[jj] > 0:
                 rev_j, totnacc_j, _, _, _ = calc_revenue(x1[jj], y1[jj], x2[jj], y2[jj], z1[jj],
@@ -162,7 +163,7 @@ class RevenueManager(ExplicitComponent):
 
         outputs['pax_flt'] = pax
         outputs['revenue'] = rev
-        print('done')
+        outputs['tot_pax'] = tot_pax
 
 
 if __name__ == '__main__':
@@ -174,10 +175,13 @@ if __name__ == '__main__':
     prob = Problem()
     prob.model = model = Group()
 
-    model.add_subsystem('Revenue', RevenueManager(general_allocation_data=general_allocation_data,
+    model.add_subsystem('revenue', RevenueManager(general_allocation_data=general_allocation_data,
                                                   allocation_data=allocation_data),
                         promotes=['*'])
 
     prob.setup()
 
     prob.run()
+    print('pax_flt', prob['pax_flt'])
+    print('revenue', prob['revenue'])
+    print('tot_pax', prob['tot_pax'])
