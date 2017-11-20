@@ -263,7 +263,6 @@ class Profit(ExplicitComponent):
                     fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
                     fuel_kj = inputs[fuelburn_name]
                     cost_kj = allocation_data['cost_other', name][jj]
-                    print('cost', cost_kj)
 
                 else:
                     cost_kj = 0.0
@@ -289,7 +288,7 @@ class Profit(ExplicitComponent):
                     BH_kj = allocation_data['BH_LF'][ind_ac, jj, LF-1]
                     MH_FH_kj = allocation_data['maint', name]
                     fuel_kj = allocation_data['fuelburn_LF'][ind_ac, jj, LF-1]
-                    print('cost', cost_kj)
+
                 else:
                     cost_kj = 0.0
                     BH_kj=0.0
@@ -320,7 +319,8 @@ if __name__ == '__main__':
         dd.add_output('{}_blocktime_hr'.format(j), 1.0)
         dd.add_output('{}_fuelburn_1e6_N'.format(j), 1.0)
 
-    model.add_subsystem('p_flt', IndepVarComp('flt_day', val=allocation_data['flt_day'] ))
+    model.add_subsystem('p_flt', IndepVarComp('flt_day', val=allocation_data['flt_day'] ),
+                        promotes=['*'])
 
     model.add_subsystem('revenue', RevenueManager(general_allocation_data=general_allocation_data,
                                                   allocation_data=allocation_data),
