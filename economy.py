@@ -329,7 +329,6 @@ if __name__ == '__main__':
                                          allocation_data=allocation_data),
                         promotes=['*'])
 
-
     prob.setup()
 
     xC0_rev = 1.0e3*np.array([[4.345998241,	1.342998121,	1.75599824,	0.70620896,	3.656998241,	0.618935819,	1.319998154,	1.388998192,	0.980982907,	2.424998241,	1.964998241,],
@@ -343,7 +342,6 @@ if __name__ == '__main__':
     prob['revenue:x2'] = xC0_rev[2, :]
     prob['revenue:y2'] = xC0_rev[3, :]
     prob['revenue:z1'] = xC0_rev[4, :]
-
 
     prob.run()
     print('Revenue')
