@@ -18,8 +18,6 @@ from amd_om.utils.pre_setup import aeroOptions, meshOptions
 
 
 def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwargs):
-    import pickle
-    import os
     from six import iteritems
 
     from openmdao.api import Problem

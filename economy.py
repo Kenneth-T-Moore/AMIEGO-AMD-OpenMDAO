@@ -57,7 +57,7 @@ def price_elasticity(LF, avail_seat, price, ran):
     alt_mode = 1 #Set this to 1 if alternate mode of transportation is available, otherwise 0
 
     dem = LF*avail_seat
-    RVector_km = ran*1.852
+    RVector_km = ran
     if alt_mode == 1:
         if (RVector_km < 300.0):
             range_elas = -1.6141
@@ -115,19 +115,20 @@ class RevenueManager(ExplicitComponent):
         price = alloc_data['price_pax', 'CRM']
         route = alloc_data['range_km']
         for jj in range(num_routes):
-            [alp, bet] = demand_bounds(demand[jj], price[jj], route[jj])
+            alp, bet = demand_bounds(demand[jj], price[jj], route[jj])
             self.alpha[jj, :] = alp
             self.beta[jj, :] = bet
 
     def compute(self, inputs, outputs):
-        num_routes = self.metadata['allocation_data']['num']
-        num_existing_aircraft = self.metadata['allocation_data']['num_existing']
-        num_new_aircraft = self.metadata['allocation_data']['num_new']
+        alloc_data = self.metadata['allocation_data']
+        num_routes = alloc_data['num']
+        num_existing_aircraft = alloc_data['num_existing']
+        num_new_aircraft = alloc_data['num_new']
         num_ac = num_existing_aircraft + num_new_aircraft
 
         seats = []
         for key in allocation_data['existing_names'] + allocation_data['new_names']:
-            seats.append(self.metadata['allocation_data']['capacity', key])
+            seats.append(alloc_data['capacity', key])
         seats = np.array(seats)
 
         trip = inputs['flt_day']
@@ -166,8 +167,153 @@ class RevenueManager(ExplicitComponent):
         outputs['tot_pax'] = tot_pax
 
 
+class Profit(ExplicitComponent):
+    """
+    Calculate values for airline profit and constraints.
+    """
+    def initialize(self):
+        self.metadata.declare('general_allocation_data', type_=dict)
+        self.metadata.declare('allocation_data', type_=dict)
+
+    def setup(self):
+        alloc_data = self.metadata['allocation_data']
+        num_routes = alloc_data['num']
+        num_existing_aircraft = alloc_data['num_existing']
+        num_new_aircraft = alloc_data['num_new']
+        num_aircraft = num_existing_aircraft + num_new_aircraft
+
+        self.add_input('revenue', shape=(num_routes, ))
+        self.add_input('pax_flt', shape=(num_routes, num_aircraft))
+        self.add_input('tot_pax', shape=(num_routes, ))
+        self.add_input('flt_day', shape=(num_routes, num_aircraft))
+
+        # Fuelburn inputs
+        for ind_nac in range(num_new_aircraft):
+            for ind_rt in range(num_routes):
+                fuelburn_name = self._get_fuelburn_name(ind_rt, ind_nac=ind_nac)
+                self.add_input(fuelburn_name)
+
+        # Blocktime inputs
+        for ind_nac in range(num_new_aircraft):
+            for ind_rt in range(num_routes):
+                blocktime_name = self._get_blocktime_name(ind_rt, ind_nac=ind_nac)
+                self.add_input(blocktime_name)
+
+        self.add_output('g_aircraft_new', shape=(num_new_aircraft, ))
+        self.add_output('g_aircraft_exist', shape=(num_existing_aircraft, ))
+        self.add_output('g_demand', shape=(num_routes, ))
+
+        # TODO: Really would be better with anaytic derivs.
+        self.declare_partials(of='*', wrt='*', method='fd')
+
+    def _get_fuelburn_name(self, ind_rt, ind_ac=None, ind_nac=None):
+        allocation_data = self.metadata['allocation_data']
+
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+
+        if ind_ac is not None:
+            ind_nac = ind_ac - num_existing_aircraft
+
+        index = ind_rt + ind_nac * num_routes
+        return '{}_fuelburn_1e6_N'.format(index)
+
+    def _get_blocktime_name(self, ind_rt, ind_ac=None, ind_nac=None):
+        allocation_data = self.metadata['allocation_data']
+
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+
+        if ind_ac is not None:
+            ind_nac = ind_ac - num_existing_aircraft
+
+        index = ind_rt + ind_nac * num_routes
+        return '{}_blocktime_hr'.format(index)
+
+    def compute(self, inputs, outputs):
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
+        num_ac = num_existing_aircraft + num_new_aircraft
+
+        trip = inputs['flt_day']
+        rev = inputs['revenue']
+        pax = inputs['pax_flt']
+        cost_fuel_N = self.metadata['general_allocation_data']['cost_fuel_N']
+        FPperlb = cost_fuel_N/6.84
+
+        profit = 0.0
+        cost = 0.0
+        g_aircraft_new = np.zeros((num_new_aircraft, ))
+        g_aircraft_exist = np.zeros((num_existing_aircraft, ))
+        g_demand = np.zeros((num_routes, ))
+
+        #New aircraft
+        for ind_nac in range(num_new_aircraft):
+            name = allocation_data['new_names'][ind_nac]
+            con_val = 0.0
+            for jj in range(num_routes):
+                x_kj = trip[jj, ind_nac]
+                if x_kj > 0:
+                    blocktime_name = self._get_blocktime_name(jj, ind_nac=ind_nac)
+                    BH_kj = inputs[blocktime_name]
+                    #BH_kj = BH_1j[dd]*inits.scale_fac
+
+                    MH_FH_kj = allocation_data['maint', name]
+                    fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
+                    fuel_kj = inputs[fuelburn_name] * 1e6
+                    cost_kj = allocation_data['cost_other', name] + cost_fuel_N*fuel_kj
+
+                else:
+                    cost_kj = 0.0
+                    BH_kj=0.0
+                    MH_FH_kj = 0.0
+
+                cost += (cost_kj + fuel_kj*FPperlb)*x_kj
+                con_val += x_kj*(BH_kj*(1.0+MH_FH_kj) + 1.0)
+
+            g_aircraft_new[ind_nac] = (con_val/(12.0*allocation_data['number', name]))
+
+        #Existing aircraft
+        for ind_ac in range(num_existing_aircraft):
+            kk = num_new_aircraft + ind_ac
+            name = allocation_data['existing_names'][ind_ac]
+            con_val = 0.0
+            for jj in range(num_routes):
+                x_kj = trip[jj, kk]
+                if x_kj > 0:
+                    LF = int(round(10.0*pax[jj, kk]/allocation_data['capacity', name]))
+                    ##TODO #This convention is different in matlab version (3D): dim1-routes,dim2-aircraft, dim3-LF
+                    #cost_kj = existac.TotCost_LF[kk-1, jj, LF-1]
+                    #BH_kj = existac.BH_LF[kk-1, jj, LF-1]
+                    MH_FH_kj = allocation_data['maint', name]
+                    #fuel_kj = existac.fuelburn_LF[kk-1, jj, LF-1]
+                else:
+                    cost_kj = 0.0
+                    BH_kj=0.0
+                    MH_FH_kj = 0.0
+
+                cost += (cost_kj + fuel_kj*FPperlb)*x_kj
+                con_val += x_kj*(BH_kj*(1.0+MH_FH_kj) + 1.0)
+
+            g_aircraft_exist[ind_ac] = (con_val/(12.0*allocation_data['number', name]))
+
+
+        #for jj in range(num_route):
+            #cc += 1
+            #g[cc] = tot_pax[jj]/dem[jj]
+
+        #profit = np.sum(rev) - cost
+
+"""
+    # print("obj", profit/-1.0e3)
+    # print("con", g)
+    return profit/-1.0e3, g
+"""
+
 if __name__ == '__main__':
-    from openmdao.api import Problem, Group
+    from openmdao.api import Problem, Group, IndepVarComp
 
     from prob_11_2_updated import allocation_data
     from amd_om.allocation.airline_networks.general_allocation_data import general_allocation_data
@@ -175,9 +321,18 @@ if __name__ == '__main__':
     prob = Problem()
     prob.model = model = Group()
 
+    dd = model.add_subsystem('dummy', IndepVarComp(), promotes=['*'])
+    for j in range(11):
+        dd.add_output('{}_blocktime_hr'.format(j), 1.0)
+        dd.add_output('{}_fuelburn_1e6_N'.format(j), 1.0)
+
     model.add_subsystem('revenue', RevenueManager(general_allocation_data=general_allocation_data,
                                                   allocation_data=allocation_data),
                         promotes=['*'])
+    model.add_subsystem('profit', Profit(general_allocation_data=general_allocation_data,
+                                         allocation_data=allocation_data),
+                        promotes=['*'])
+
 
     prob.setup()
 
