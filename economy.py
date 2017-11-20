@@ -127,7 +127,7 @@ class RevenueManager(ExplicitComponent):
         num_ac = num_existing_aircraft + num_new_aircraft
 
         seats = []
-        for key in allocation_data['existing_names'] + allocation_data['new_names']:
+        for key in allocation_data['names']:
             seats.append(alloc_data['capacity', key])
         seats = np.array(seats)
 
@@ -285,10 +285,10 @@ class Profit(ExplicitComponent):
                 if x_kj > 0:
                     LF = int(round(10.0*pax[jj, kk]/allocation_data['capacity', name]))
                     ##TODO #This convention is different in matlab version (3D): dim1-routes,dim2-aircraft, dim3-LF
-                    #cost_kj = existac.TotCost_LF[kk-1, jj, LF-1]
-                    #BH_kj = existac.BH_LF[kk-1, jj, LF-1]
+                    cost_kj = allocation_data['TotCost_LF'][kk-1, jj, LF-1]
+                    BH_kj = allocation_data['BH_LF'][kk-1, jj, LF-1]
                     MH_FH_kj = allocation_data['maint', name]
-                    #fuel_kj = existac.fuelburn_LF[kk-1, jj, LF-1]
+                    fuel_kj = allocation_data['fuelburn_LF'][kk-1, jj, LF-1]
                 else:
                     cost_kj = 0.0
                     BH_kj=0.0
