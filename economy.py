@@ -256,8 +256,7 @@ class Profit(ExplicitComponent):
                 x_kj = trip[ind_nac, jj]
                 if x_kj > 0:
                     blocktime_name = self._get_blocktime_name(jj, ind_nac=ind_nac)
-                    BH_kj = inputs[blocktime_name]
-                    #BH_kj = BH_1j[dd]*inits.scale_fac
+                    BH_kj = inputs[blocktime_name]*allocation_data['scale_fac']
 
                     MH_FH_kj = allocation_data['maint', name]
                     fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)

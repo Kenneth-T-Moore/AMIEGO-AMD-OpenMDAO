@@ -13,6 +13,7 @@ from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aer
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
 from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitude, plot_single_mission_data
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
+from amd_om.utils.recorder_setup import get_recorder
 
 #from amd_om.utils.pre_setup import aeroOptions, meshOptions
 aeroOptions = {}
@@ -86,8 +87,6 @@ class AllocationMissionDesignGroup(Group):
 
 def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwargs):
 
-    from amd_om.utils.recorder_setup import get_recorder
-
     list_of_kwargs = [
         'flight_conditions', 'aircraft_data', 'aeroOptions', 'meshOptions', 'design_variables',
         'general_allocation_data', 'allocation_data', 'ref_area_m2', 'Wac_1e6_N', 'Mach_mode',
@@ -103,6 +102,7 @@ def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwa
     recorder_file_name = 'recorder_amd.db'
 
     prob.driver = pyOptSparseWithScreening()
+    prob.driver.allocation_data = allocation_data
     prob.driver.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
 
     system_includes = []
@@ -131,7 +131,6 @@ def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwa
     prob.run_model()
 
     prob.run_driver()
-
 
 this_dir = os.path.split(__file__)[0]
 if not this_dir.endswith('/'):
@@ -185,12 +184,39 @@ aerodynamics_model = get_aero_smt_model()
 xt, yt, xlimits = get_rans_crm_wing()
 aerodynamics_model.xt = xt
 
-perform_allocation_mission_design_opt(initial_dvs, output_dir, record,
-    flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-    aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
-    general_allocation_data=general_allocation_data, allocation_data=allocation_data,
-    ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
-    propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
-    initial_mission_vars=initial_mission_vars,
-)
 
+prob = Problem(model=AllocationMissionDesignGroup(**kwargs))
+
+snopt_file_name = 'SNOPT_print_amd.out'
+recorder_file_name = 'recorder_amd.db'
+
+prob.driver = pyOptSparseWithScreening()
+prob.driver.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
+
+# KEN - Setting up case recorders with this many vars takes forever.
+#system_includes = []
+#system_includes.append('design_group.concatenating_comp.CLt')
+#system_includes.append('design_group.concatenating_comp.CDt')
+#for ind in range(128):
+    #msn_name = 'allocation_mission_group.multi_mission_group.mission_{}'.format(ind)
+    #system_includes.append(msn_name + '.functionals.fuelburn_comp.fuelburn_1e6_N')
+    #system_includes.append(msn_name + '.functionals.blocktime_comp.blocktime_hr')
+    #system_includes.append(msn_name + '.bsplines.comp_x.x_1e3_km')
+    #system_includes.append(msn_name + '.bsplines.comp_h.h_km')
+    #system_includes.append(msn_name + '.atmos.mach_number_comp.M')
+    #system_includes.append(msn_name + '.sys_coupled_analysis.vertical_eom_comp.CL')
+    #system_includes.append(msn_name + '.sys_coupled_analysis.aero_comp.CD')
+
+if record:
+    recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
+    prob.driver.add_recorder(recorder)
+    #prob.driver.recording_options['includes'] = system_includes
+
+prob.setup(vector_class=PETScVector)
+
+for key, value in iteritems(initial_dvs):
+    prob[key] = value
+
+prob.run_model()
+
+prob.run_driver()

@@ -105,16 +105,17 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
             Approzimate array of constraint values to use in place of continuous
             run if not run.
         """
-        alloc_data = self.metadata['allocation_data']
         preopt_flag = True
 
         # Run Model
+        self.allocation_data['scale_fac'] = 0.95
         model._solve_nonlinear()
+        self.allocation_data['scale_fac'] = 1.0
 
         profit = self.get_objective_values()['profit']
         cons = self.get_constraint_values()
 
-        for key in ['g_aircraft_new', 'g_aircraft_exist', 'g_demand']:
+        for key in ['g_aircraft_new', 'g_aircraft_exist']:
             con = cons[key]
             for kk in range(len(con)):
                 if con[kk] > (1.0 + 1.0e-6): #New aircraft check within 1%, hoping optimizer can make it feasible
