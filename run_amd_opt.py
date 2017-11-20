@@ -2,28 +2,90 @@ import numpy as np
 import pickle
 import os
 
-from prob_11_2_updated import allocation_data
-from prob_11_2_general_allocation import general_allocation_data
+from six import iteritems
+
+from openmdao.api import Problem, Group, IndepVarComp
+from openmdao.parallel_api import PETScVector
+
 from amd_om.allocation_mission import AllocationMissionGroup
-
 from amd_om.design.utils.flight_conditions import get_flight_conditions
-
 from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
-from amd_om.allocation_mission_design import AllocationMissionDesignGroup
 from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitude, plot_single_mission_data
-
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
-from amd_om.utils.pre_setup import aeroOptions, meshOptions
+
+#from amd_om.utils.pre_setup import aeroOptions, meshOptions
+aeroOptions = {}
+meshOptions = {}
+
+from prob_11_2_updated import allocation_data
+from prob_11_2_general_allocation import general_allocation_data
+from preopt_screen import pyOptSparseWithScreening
+
+class AllocationMissionDesignGroup(Group):
+
+    def initialize(self):
+        self.metadata.declare('flight_conditions', type_=dict)
+        self.metadata.declare('aircraft_data', type_=dict)
+        self.metadata.declare('aeroOptions', default=None, type_=dict, allow_none=True)
+        self.metadata.declare('meshOptions', default=None, type_=dict, allow_none=True)
+        self.metadata.declare('design_variables', type_=list,
+            default=['shape', 'twist', 'sweep', 'area'])
+
+        self.metadata.declare('general_allocation_data', type_=dict)
+        self.metadata.declare('allocation_data', type_=dict)
+
+        self.metadata.declare('ref_area_m2', default=10., type_=np.ScalarType)
+        self.metadata.declare('Wac_1e6_N', default=1., type_=np.ScalarType)
+        self.metadata.declare('Mach_mode', 'TAS', values=['TAS', 'EAS', 'IAS', 'constant'])
+
+        self.metadata.declare('propulsion_model')
+        self.metadata.declare('aerodynamics_model')
+
+        self.metadata.declare('initial_mission_vars', type_=dict, allow_none=True)
+
+    def setup(self):
+        meta = self.metadata
+
+        flight_conditions = meta['flight_conditions']
+        aircraft_data = meta['aircraft_data']
+        design_variables = meta['design_variables']
+
+        if meta['aeroOptions']:
+            aeroOptions.update(meta['aeroOptions'])
+
+        if meta['meshOptions']:
+            meshOptions.update(meta['meshOptions'])
+
+        general_allocation_data = meta['general_allocation_data']
+        allocation_data = meta['allocation_data']
+
+        ref_area_m2 = meta['ref_area_m2']
+        Wac_1e6_N = meta['Wac_1e6_N']
+        Mach_mode = meta['Mach_mode']
+
+        propulsion_model = meta['propulsion_model']
+        aerodynamics_model = meta['aerodynamics_model']
+
+        initial_mission_vars = meta['initial_mission_vars']
+
+        #design_group = DesignGroup(
+            #flight_conditions=flight_conditions, aircraft_data=aircraft_data,
+            #aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
+        #)
+        #self.add_subsystem('design_group', design_group, promotes=['*'])
+
+        allocation_mission_group = AllocationMissionGroup(
+            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+            ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
+            propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+            initial_mission_vars=initial_mission_vars,
+        )
+        self.add_subsystem('allocation_mission_group', allocation_mission_group, promotes=['*'])
 
 
 def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwargs):
-    from six import iteritems
 
-    from openmdao.api import Problem
-    from openmdao.parallel_api import PETScVector
-
-    from amd_om.utils.pyoptsparse_setup import get_pyoptsparse_driver
     from amd_om.utils.recorder_setup import get_recorder
 
     list_of_kwargs = [
@@ -40,7 +102,7 @@ def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwa
     snopt_file_name = 'SNOPT_print_amd.out'
     recorder_file_name = 'recorder_amd.db'
 
-    prob.driver = get_pyoptsparse_driver()
+    prob.driver = pyOptSparseWithScreening()
     prob.driver.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
 
     system_includes = []
@@ -59,7 +121,7 @@ def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwa
     if record:
         recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
         prob.driver.add_recorder(recorder)
-        prob.driver.recording_options['system_includes'] = system_includes
+        #prob.driver.recording_options['includes'] = system_includes
 
     prob.setup(vector_class=PETScVector)
 
@@ -72,6 +134,8 @@ def perform_allocation_mission_design_opt(initial_dvs, output_dir, record, **kwa
 
 
 this_dir = os.path.split(__file__)[0]
+if not this_dir.endswith('/'):
+    this_dir += '/'
 output_dir = this_dir + '_amd_outputs/'
 
 flight_conditions = get_flight_conditions()
@@ -95,10 +159,10 @@ optimum_design_data = pickle.load(open(os.path.join(this_dir, optimum_design_fil
 for key in ['shape', 'twist', 'sweep', 'area']:
     initial_dvs[key] = optimum_design_data[key]
 
-optimum_alloc_filename = '_allocation_outputs/optimum_alloc.pkl'
-optimum_alloc_data = pickle.load(open(os.path.join(this_dir, optimum_alloc_filename), 'rb'))
-for key in ['pax_flt', 'flt_day']:
-    initial_dvs[key] = optimum_alloc_data[key]
+#optimum_alloc_filename = '_allocation_outputs/optimum_alloc.pkl'
+#optimum_alloc_data = pickle.load(open(os.path.join(this_dir, optimum_alloc_filename), 'rb'))
+#for key in ['pax_flt', 'flt_day']:
+    #initial_dvs[key] = optimum_alloc_data[key]
 
 initial_mission_vars = {}
 
