@@ -87,10 +87,10 @@ class RevenueManager(ExplicitComponent):
         self.metadata.declare('allocation_data', type_=dict)
 
     def setup(self):
-        alloc_data = self.metadata['allocation_data']
-        num_routes = alloc_data['num']
-        num_existing_aircraft = alloc_data['num_existing']
-        num_new_aircraft = alloc_data['num_new']
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
         num_aircraft = num_existing_aircraft + num_new_aircraft
 
         self.add_input('revenue:x1', shape=(num_routes, ))
@@ -111,24 +111,24 @@ class RevenueManager(ExplicitComponent):
         # Calculate Demand bounds for each route.
         self.alpha = np.empty((num_routes, 2))
         self.beta = np.empty((num_routes, 2))
-        demand = alloc_data['demand']
-        price = alloc_data['price_pax', 'CRM']
-        route = alloc_data['range_km']
+        demand = allocation_data['demand']
+        price = allocation_data['price_pax', 'CRM']
+        route = allocation_data['range_km']
         for jj in range(num_routes):
             alp, bet = demand_bounds(demand[jj], price[jj], route[jj])
             self.alpha[jj, :] = alp
             self.beta[jj, :] = bet
 
     def compute(self, inputs, outputs):
-        alloc_data = self.metadata['allocation_data']
-        num_routes = alloc_data['num']
-        num_existing_aircraft = alloc_data['num_existing']
-        num_new_aircraft = alloc_data['num_new']
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
         num_ac = num_existing_aircraft + num_new_aircraft
 
         seats = []
         for key in allocation_data['names']:
-            seats.append(alloc_data['capacity', key])
+            seats.append(allocation_data['capacity', key])
         seats = np.array(seats)
 
         trip = inputs['flt_day']
@@ -176,10 +176,10 @@ class Profit(ExplicitComponent):
         self.metadata.declare('allocation_data', type_=dict)
 
     def setup(self):
-        alloc_data = self.metadata['allocation_data']
-        num_routes = alloc_data['num']
-        num_existing_aircraft = alloc_data['num_existing']
-        num_new_aircraft = alloc_data['num_new']
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
         num_aircraft = num_existing_aircraft + num_new_aircraft
 
         self.add_input('revenue', shape=(num_routes, ))

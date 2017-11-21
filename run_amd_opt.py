@@ -15,9 +15,7 @@ from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitud
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
 from amd_om.utils.recorder_setup import get_recorder
 
-#from amd_om.utils.pre_setup import aeroOptions, meshOptions
-aeroOptions = {}
-meshOptions = {}
+from amd_om.utils.pre_setup import aeroOptions, meshOptions
 
 from amiego_pre_opt import AMIEGO_With_Pre
 from economy import Profit, RevenueManager
@@ -110,16 +108,26 @@ class AllocationMissionGroup(Group):
         flt_day = get_ones_array(1e-2)
 
         flt_day_lower = get_ones_array( 0.)
-        flt_day_upper = get_ones_array(10.)
+        flt_day_upper = get_ones_array(0.)
+
+        seats = []
+        for key in allocation_data['names']:
+            seats.append(allocation_data['capacity', key])
+        seats = np.array(seats)
 
         for ind_ac in range(num_aircraft):
             aircraft_name = allocation_data['names'][ind_ac]
             for ind_rt in range(num_routes):
+
+                # Zeroing out the planes that can't fly that far.
                 key = ('fuel_N', aircraft_name)
                 if key in allocation_data and allocation_data[key][ind_rt] > 1e12:
                     flt_day[ind_rt, ind_ac] = 0.
                     flt_day_lower[ind_rt, ind_ac] = 0.
                     flt_day_upper[ind_rt, ind_ac] = 0.
+                else:
+                    # Setting the upper bound
+                    flt_day_upper[ind_rt, ind_ac] = np.ceil(allocation_data['demand'][ind_rt]/(0.8*seats[ind_ac]))
 
         # Revenue Initial Conditions:
         xC0_rev = 1.0e3*np.array([0.2055,0.2947,0.3326,0.3559,0.4016,0.4215,0.6525,0.6765,\
@@ -227,11 +235,11 @@ class AllocationMissionDesignGroup(Group):
 
         initial_mission_vars = meta['initial_mission_vars']
 
-        #design_group = DesignGroup(
-            #flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-            #aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
-        #)
-        #self.add_subsystem('design_group', design_group, promotes=['*'])
+        design_group = DesignGroup(
+            flight_conditions=flight_conditions, aircraft_data=aircraft_data,
+            aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
+        )
+        self.add_subsystem('design_group', design_group, promotes=['*'])
 
         allocation_mission_group = AllocationMissionGroup(
             general_allocation_data=general_allocation_data, allocation_data=allocation_data,
@@ -310,6 +318,10 @@ prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
 prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-3
 prob.driver.cont_opt.opt_settings['Major feasibility tolerance'] = 1e-3
 prob.driver.cont_opt.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
+
+# Load in initial sample points
+sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
+prob.driver.sampling = {'flt_day' : [np.array([item]) for item in sample_data]}
 
 # KEN - Setting up case recorders with this many vars takes forever.
 #system_includes = []
