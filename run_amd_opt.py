@@ -139,11 +139,11 @@ class AllocationMissionGroup(Group):
 
         inputs_comp = IndepVarComp()
         inputs_comp.add_output('flt_day', val=flt_day, shape=(num_routes, num_aircraft))
-        inputs_comp.add_output('revenue:x1', val=xC0_rev[:11], shape=(num_routes, ))
-        inputs_comp.add_output('revenue:y1', val=xC0_rev[11:22], shape=(num_routes, ))
-        inputs_comp.add_output('revenue:x2', val=xC0_rev[22:33], shape=(num_routes, ))
-        inputs_comp.add_output('revenue:y2', val=xC0_rev[33:44], shape=(num_routes, ))
-        inputs_comp.add_output('revenue:z1', val=xC0_rev[44:55], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:x1', val=xC0_rev[0, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:y1', val=xC0_rev[1, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:x2', val=xC0_rev[2, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:y2', val=xC0_rev[3, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:z1', val=xC0_rev[4, :], shape=(num_routes, ))
 
         revenue_comp = RevenueManager(general_allocation_data=general_allocation_data,
                                       allocation_data=allocation_data)
@@ -265,7 +265,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
                'grad_scaler' : 10.,
-               'outputDirectory' : '/nobackupp2/ktmoore1'
+               'outputDirectory' : '/nobackupp2/ktmoore1/run1'
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
