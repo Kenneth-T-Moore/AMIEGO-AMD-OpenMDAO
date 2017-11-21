@@ -79,15 +79,16 @@ allocation_data['num_cp'] = 20 * np.ones(11, int)
 
 # [CRM, 738, 747] in this order (one-way)
 allocation_data['flt_day'] = np.array([
-    [1,    0,    4,    1,    0,    0,    1,    2,    1,    0,    0],
-    [0,    7,    0,    11,    0,    1,    0,    0,    9,    0,    0],
-    [0,    5,    7,    1,    3,    0,    1,    3,    1,    1,    1],
+    [1,    0,    4,    0,    0,    1,    1,    0,    4,    0,    0],
+    [0,    12,   0,    1,    0,    0,    0,    4,    4,    0,    0],
+    [0,    3,    7,    5,    3,    0,    1,    3,    1,    1,    1],
 ])
 
+#We don't need this though. This is for the old model with no revenue management model
 allocation_data['pax_flt'] = np.array([
-    [10,    0,    289,    39,    0,    0,    245,    280,    264,    0,    0],
-    [0,   152,    0,    162,    0,    57,    0,    0,    162,    0,    0],
-    [0,   416,    416,    416,    404,    0,    416,    416,    416,    329,    356],
+    [10,     0,     1115,      0,        0,    57,    245,       0,    1074,      0,      0],
+    [0,   1897,        0,    157,        0,     0,      0,     560,     648,      0,      0],
+    [0,   1248,     2912,    2080,    1212,     0,    416,    1248,     416,    329,    356],
 ])
 
 
@@ -124,6 +125,7 @@ for ac in range(allocation_data['num_existing']):
 allocation_data['BH_LF'] = BH_LF
 allocation_data['TotCost_LF'] = TotCost_LF
 allocation_data['fuelburn_LF'] = fuelburn_LF
+
 
 # Scaling factor:
 # Satadru: Obj and cons will change based on xI (trip) value that come from Amiego. But fuel burn and Bh will stay nearly same.
