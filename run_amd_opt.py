@@ -7,6 +7,7 @@ from six import iteritems
 from openmdao.api import Problem, Group, IndepVarComp, NonlinearBlockGS, LinearBlockGS, ExecComp
 from openmdao.parallel_api import PETScVector
 
+from amd_om.design.design_group import DesignGroup
 from amd_om.design.utils.flight_conditions import get_flight_conditions
 from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
@@ -259,13 +260,13 @@ output_dir = this_dir + '_amd_outputs/'
 
 flight_conditions = get_flight_conditions()
 
-aeroOptions = {'gridFile' : '../../../grids/L3_myscaled.cgns',
+aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writesurfacesolution' : False,
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
                'grad_scaler' : 10.,
                }
-meshOptions = {'gridFile' : '../../../grids/L3_myscaled.cgns'}
+meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
 record = True
 
@@ -274,8 +275,9 @@ design_variables = ['shape', 'twist', 'sweep', 'area']
 initial_dvs = {}
 
 # Loads in initial design variables for aero.
-optimum_design_filename = '_design_outputs/optimum_design.pkl'
-optimum_design_data = pickle.load(open(os.path.join(this_dir, optimum_design_filename), 'rb'))
+optimum_design_filename = './_design_outputs/optimum_design.pkl'
+optimum_design_data = pickle.load(open(optimum_design_filename, 'rb'))
+#optimum_design_data = pickle.load(open(os.path.join(this_dir, optimum_design_filename), 'rb'))
 for key in ['shape', 'twist', 'sweep', 'area']:
     initial_dvs[key] = optimum_design_data[key]
 
@@ -283,8 +285,9 @@ initial_mission_vars = {}
 
 num_routes = allocation_data['num']
 for ind in range(num_routes):
-    optimum_mission_filename = '_mission_outputs/optimum_msn_{:03}.pkl'.format(ind)
-    optimum_mission_data = pickle.load(open(os.path.join(this_dir, optimum_mission_filename), 'rb'))
+    optimum_mission_filename = './_mission_outputs/optimum_msn_{:03}.pkl'.format(ind)
+    optimum_mission_data = pickle.load(open(optimum_mission_filename, 'rb'))
+    #optimum_mission_data = pickle.load(open(os.path.join(this_dir, optimum_mission_filename), 'rb'))
     for key in ['h_km_cp', 'M0']:
         initial_mission_vars[ind, key] = optimum_mission_data[key]
 
