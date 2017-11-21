@@ -99,7 +99,7 @@ class RevenueManager(ExplicitComponent):
         self.add_input('revenue:y2', shape=(num_routes, ))
         self.add_input('revenue:z1', shape=(num_routes, ))
 
-        self.add_input('flt_day', shape=(num_aircraft, num_routes))
+        self.add_input('flt_day', shape=(num_routes, num_aircraft))
 
         self.add_output('pax_flt', shape=(num_routes, num_aircraft))
         self.add_output('revenue', shape=(num_routes, ))
@@ -141,7 +141,7 @@ class RevenueManager(ExplicitComponent):
         beta = self.beta
 
         # Total number of seats available per day for a route.
-        max_avail_seats = seats.dot(trip)
+        max_avail_seats = seats.dot(trip.T)
 
         # Main Revenue calculation.
         rev = np.zeros((num_routes, ))
@@ -154,7 +154,7 @@ class RevenueManager(ExplicitComponent):
                                                          max_avail_seats[jj])
                 rev[jj] = rev_j
                 for kk in range(num_ac):
-                    x_kj = trip[kk, jj]
+                    x_kj = trip[jj, kk]
                     if x_kj > 0:
                         pax[jj, kk] = min(seats[kk], seats[kk]*totnacc_j/max_avail_seats[jj])
             else:
@@ -185,7 +185,7 @@ class Profit(ExplicitComponent):
         self.add_input('revenue', shape=(num_routes, ))
         self.add_input('pax_flt', shape=(num_routes, num_aircraft))
         self.add_input('tot_pax', shape=(num_routes, ))
-        self.add_input('flt_day', shape=(num_aircraft, num_routes))
+        self.add_input('flt_day', shape=(num_routes, num_aircraft))
 
         # Fuelburn inputs
         for ind_nac in range(num_new_aircraft):
@@ -253,7 +253,7 @@ class Profit(ExplicitComponent):
             name = allocation_data['new_names'][ind_nac]
             con_val = 0.0
             for jj in range(num_routes):
-                x_kj = trip[ind_nac, jj]
+                x_kj = trip[jj, ind_nac]
                 if x_kj > 0:
                     blocktime_name = self._get_blocktime_name(jj, ind_nac=ind_nac)
                     BH_kj = inputs[blocktime_name]*allocation_data['scale_fac']
@@ -279,7 +279,7 @@ class Profit(ExplicitComponent):
             name = allocation_data['existing_names'][ind_ac]
             con_val = 0.0
             for jj in range(num_routes):
-                x_kj = trip[kk, jj]
+                x_kj = trip[jj, kk]
                 if x_kj > 0:
                     LF = int(round(10.0*pax[jj, kk]/allocation_data['capacity', name]))
                     ##TODO #This convention is different in matlab version (3D): dim1-routes,dim2-aircraft, dim3-LF
@@ -318,7 +318,7 @@ if __name__ == '__main__':
         dd.add_output('{}_blocktime_hr'.format(j), 1.0)
         dd.add_output('{}_fuelburn_1e6_N'.format(j), 1.0)
 
-    model.add_subsystem('p_flt', IndepVarComp('flt_day', val=allocation_data['flt_day'] ),
+    model.add_subsystem('p_flt', IndepVarComp('flt_day', val=allocation_data['flt_day'].T ),
                         promotes=['*'])
 
     model.add_subsystem('revenue', RevenueManager(general_allocation_data=general_allocation_data,
@@ -330,11 +330,11 @@ if __name__ == '__main__':
 
     prob.setup()
 
-    xC0_rev = 1.0e3*np.array([[ 4.3460,    1.3430,    1.7560,    0.7062,    3.6570,    0.6189,    1.3200,    1.3890,    0.9810,    2.4250    1.9650,],
-                              [ 2.6318,    0.4475,    0.5851,    0.2357,    1.2197,    0.2159,    0.4400,    0.4629,    0.3269,    0.7980    0.6416,],
-                              [ 6.0180,    1.1577,    1.5140,    0.6311,    3.1820,    0.7101,    1.1561,    1.2043,    0.8479,    2.1036    1.6272,],
-                              [ 3.7277,    0.6471,    0.8467,    0.3331,    1.7368,    0.3450,    0.6442,    0.6730,    0.4673,    1.1667    0.9138,],
-                              [ 0.3000,    3.1920,    4.1120,    2.2420,    1.2480,    0.3000,    0.7160,    1.8960,    2.2640,    0.4160    0.4160]])
+    xC0_rev = 1.0e3*np.array([[ 4.3460,    1.3430,    1.7560,    0.7062,    3.6570,    0.6189,    1.3200,    1.3890,    0.9810,    2.4250,    1.9650],
+                              [ 2.6318,    0.4475,    0.5851,    0.2357,    1.2197,    0.2159,    0.4400,    0.4629,    0.3269,    0.7980,    0.6416],
+                              [ 6.0180,    1.1577,    1.5140,    0.6311,    3.1820,    0.7101,    1.1561,    1.2043,    0.8479,    2.1036,    1.6272],
+                              [ 3.7277,    0.6471,    0.8467,    0.3331,    1.7368,    0.3450,    0.6442,    0.6730,    0.4673,    1.1667,    0.9138],
+                              [ 0.3000,    3.1920,    4.1120,    2.2420,    1.2480,    0.3000,    0.7160,    1.8960,    2.2640,    0.4160,    0.4160]])
 
     prob['revenue:x1'] = xC0_rev[0, :]
     prob['revenue:y1'] = xC0_rev[1, :]
