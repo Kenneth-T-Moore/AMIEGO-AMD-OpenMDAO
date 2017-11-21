@@ -345,11 +345,14 @@ if record:
     prob.driver.add_recorder(recorder)
     #prob.driver.recording_options['includes'] = system_includes
 
+print("Running Setup")
 prob.setup(vector_class=PETScVector)
-
+print("Setup Complete")
 for key, value in iteritems(initial_dvs):
     prob[key] = value
 
 prob.run_model()
 
-prob.run_driver()
+#prob.run_driver()
+
+
