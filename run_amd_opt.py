@@ -303,8 +303,13 @@ prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_condi
 snopt_file_name = 'SNOPT_print_amd.out'
 recorder_file_name = 'recorder_amd.db'
 
-prob.driver = pyOptSparseWithScreening()
-prob.driver.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
+prob.driver = AMIEGO_With_Pre()
+prob.driver.options['disp'] = True
+prob.driver.cont_opt = pyOptSparseWithScreening()
+prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
+prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-3
+prob.driver.cont_opt.opt_settings['Major feasibility tolerance'] = 1e-3
+prob.driver.cont_opt.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
 
 # KEN - Setting up case recorders with this many vars takes forever.
 #system_includes = []
