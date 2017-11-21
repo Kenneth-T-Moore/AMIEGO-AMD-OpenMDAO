@@ -30,8 +30,8 @@ class AllocationGroup(Group):
     Modified version of AllocationGroup that includes part of Revenuue Management.
     """
     def initialize(self):
-        self.metadata.declare('general_allocation_data', type_=dict)
-        self.metadata.declare('allocation_data', type_=dict)
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
 
     def setup(self):
         general_allocation_data = self.metadata['general_allocation_data']
@@ -69,17 +69,17 @@ class AllocationGroup(Group):
 class AllocationMissionGroup(Group):
 
     def initialize(self):
-        self.metadata.declare('general_allocation_data', type_=dict)
-        self.metadata.declare('allocation_data', type_=dict)
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
 
-        self.metadata.declare('ref_area_m2', default=10., type_=np.ScalarType)
-        self.metadata.declare('Wac_1e6_N', default=1., type_=np.ScalarType)
+        self.metadata.declare('ref_area_m2', default=10., types=np.ScalarType)
+        self.metadata.declare('Wac_1e6_N', default=1., types=np.ScalarType)
         self.metadata.declare('Mach_mode', 'TAS', values=['TAS', 'EAS', 'IAS', 'constant'])
 
         self.metadata.declare('propulsion_model')
         self.metadata.declare('aerodynamics_model')
 
-        self.metadata.declare('initial_mission_vars', default=None, type_=dict, allow_none=True)
+        self.metadata.declare('initial_mission_vars', default=None, types=dict, allow_none=True)
 
     def setup(self):
         meta = self.metadata
@@ -192,24 +192,24 @@ class AllocationMissionGroup(Group):
 class AllocationMissionDesignGroup(Group):
 
     def initialize(self):
-        self.metadata.declare('flight_conditions', type_=dict)
-        self.metadata.declare('aircraft_data', type_=dict)
-        self.metadata.declare('aeroOptions', default=None, type_=dict, allow_none=True)
-        self.metadata.declare('meshOptions', default=None, type_=dict, allow_none=True)
-        self.metadata.declare('design_variables', type_=list,
+        self.metadata.declare('flight_conditions', types=dict)
+        self.metadata.declare('aircraft_data', types=dict)
+        self.metadata.declare('aeroOptions', default=None, types=dict, allow_none=True)
+        self.metadata.declare('meshOptions', default=None, types=dict, allow_none=True)
+        self.metadata.declare('design_variables', types=list,
             default=['shape', 'twist', 'sweep', 'area'])
 
-        self.metadata.declare('general_allocation_data', type_=dict)
-        self.metadata.declare('allocation_data', type_=dict)
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
 
-        self.metadata.declare('ref_area_m2', default=10., type_=np.ScalarType)
-        self.metadata.declare('Wac_1e6_N', default=1., type_=np.ScalarType)
+        self.metadata.declare('ref_area_m2', default=10., types=np.ScalarType)
+        self.metadata.declare('Wac_1e6_N', default=1., types=np.ScalarType)
         self.metadata.declare('Mach_mode', 'TAS', values=['TAS', 'EAS', 'IAS', 'constant'])
 
         self.metadata.declare('propulsion_model')
         self.metadata.declare('aerodynamics_model')
 
-        self.metadata.declare('initial_mission_vars', type_=dict, allow_none=True)
+        self.metadata.declare('initial_mission_vars', types=dict, allow_none=True)
 
     def setup(self):
         meta = self.metadata
