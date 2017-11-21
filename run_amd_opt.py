@@ -256,7 +256,7 @@ class AllocationMissionDesignGroup(Group):
 this_dir = os.path.split(__file__)[0]
 if not this_dir.endswith('/'):
     this_dir += '/'
-output_dir = this_dir + '_amd_outputs/'
+output_dir = './_amd_outputs/'
 
 flight_conditions = get_flight_conditions()
 
@@ -269,7 +269,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
-record = True
+record = False
 
 design_variables = ['shape', 'twist', 'sweep', 'area']
 
@@ -346,11 +346,14 @@ if record:
     prob.driver.add_recorder(recorder)
     #prob.driver.recording_options['includes'] = system_includes
 
+print("Running Setup")
 prob.setup(vector_class=PETScVector)
-
+print("Setup Complete")
 for key, value in iteritems(initial_dvs):
     prob[key] = value
 
 prob.run_model()
 
-prob.run_driver()
+#prob.run_driver()
+
+
