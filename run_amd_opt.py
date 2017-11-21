@@ -265,6 +265,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
                'grad_scaler' : 10.,
+               'outputDirectory' : '/nobackupp2/ktmoore1'
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
