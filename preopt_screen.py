@@ -5,6 +5,7 @@ the optimization.
 from __future__ import print_function
 
 from six import iteritems
+from six.moves import range
 
 import numpy as np
 from mpi4py import MPI
@@ -105,6 +106,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
             Approzimate array of constraint values to use in place of continuous
             run if not run.
         """
+        model = self._problem.model
         preopt_flag = True
 
         # Run Model
@@ -112,7 +114,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         model._solve_nonlinear()
         self.allocation_data['scale_fac'] = 1.0
 
-        prom2abs = self._problem.model._var_allprocs_prom2abs_list['output']
+        prom2abs = model._var_allprocs_prom2abs_list['output']
         profit_key = prom2abs['profit'][0]
         conkey1 = prom2abs['g_aircraft_new'][0]
         conkey2 = prom2abs['g_aircraft_exist'][0]
