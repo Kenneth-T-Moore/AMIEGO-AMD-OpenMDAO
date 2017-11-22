@@ -7,6 +7,8 @@ import numpy as np
 
 from openmdao.drivers.amiego_driver import AMIEGO_driver
 
+from economy import demand_bounds
+
 
 class AMIEGO_With_Pre(AMIEGO_driver):
 
