@@ -85,11 +85,11 @@ allocation_data['flt_day'] = np.array([
 ])
 
 #We don't need this though. This is for the old model with no revenue management model
-allocation_data['pax_flt'] = np.array([
-    [10,     0,     1115,      0,        0,    57,    245,       0,    1074,      0,      0],
-    [0,   1897,        0,    157,        0,     0,      0,     560,     648,      0,      0],
-    [0,   1248,     2912,    2080,    1212,     0,    416,    1248,     416,    329,    356],
-])
+#allocation_data['pax_flt'] = np.array([
+    #[10,     0,     1115,      0,        0,    57,    245,       0,    1074,      0,      0],
+    #[0,   1897,        0,    157,        0,     0,      0,     560,     648,      0,      0],
+    #[0,   1248,     2912,    2080,    1212,     0,    416,    1248,     416,    329,    356],
+#])
 
 
 # Load factor stuff for the existing AC
