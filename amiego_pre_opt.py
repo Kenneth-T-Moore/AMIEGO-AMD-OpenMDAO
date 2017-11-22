@@ -23,11 +23,11 @@ class AMIEGO_With_Pre(AMIEGO_driver):
 
         prom2abs = self._problem.model._var_allprocs_prom2abs_list['output']
 
-        x1_path = prom2abs['x1'][0]
-        x2_path = prom2abs['x2'][0]
-        y1_path = prom2abs['y1'][0]
-        y2_path = prom2abs['y2'][0]
-        z1_path = prom2abs['z1'][0]
+        x1_path = prom2abs['revenue:x1'][0]
+        x2_path = prom2abs['revenue:x2'][0]
+        y1_path = prom2abs['revenue:y1'][0]
+        y2_path = prom2abs['revenue:y2'][0]
+        z1_path = prom2abs['revenue:z1'][0]
         flt_day_path = prom2abs['flt_day'][0]
 
         trip = self.get_design_var_values()[flt_day_path].T
