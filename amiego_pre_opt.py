@@ -34,7 +34,7 @@ class AMIEGO_With_Pre(AMIEGO_driver):
         z1_path = prom2abs['revenue:z1'][0]
         flt_day_path = prom2abs['flt_day'][0]
 
-        trip = self.get_design_var_values()[flt_day_path].T
+        trip = self.get_design_var_values()[flt_day_path]
 
         seats = []
         for key in alloc_data['names']:
@@ -52,7 +52,7 @@ class AMIEGO_With_Pre(AMIEGO_driver):
         for jj in range(num_route):
             av_seat = 0
             for kk in range(num_aircraft):
-                x_kj = trip[jj, kk]
+                x_kj = trip[11*kk + jj]
                 av_seat += seats[kk]*x_kj
 
             if av_seat > 0:
