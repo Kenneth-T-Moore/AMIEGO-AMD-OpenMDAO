@@ -125,3 +125,9 @@ for ac in range(allocation_data['num_existing']):
 allocation_data['BH_LF'] = BH_LF
 allocation_data['TotCost_LF'] = TotCost_LF
 allocation_data['fuelburn_LF'] = fuelburn_LF
+
+
+# Scaling factor:
+# Satadru: Obj and cons will change based on xI (trip) value that come from Amiego. But fuel burn and Bh will stay nearly same.
+# Satadru: That's why i used a scale_fac of 0.95 to account for the coupling with continuous variables.
+allocation_data['scale_fac'] = 1.0
