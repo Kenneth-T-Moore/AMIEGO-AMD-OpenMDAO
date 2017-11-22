@@ -269,7 +269,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
-record = False
+record = True
 
 design_variables = ['shape', 'twist', 'sweep', 'area']
 
@@ -344,6 +344,7 @@ prob.driver.sampling = {'flt_day' : [np.array([item]) for item in sample_data]}
 if record:
     recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
     prob.driver.add_recorder(recorder)
+    prob.driver.recording_options['record_metadata'] = False
     #prob.driver.recording_options['includes'] = system_includes
 
 print("Running Setup")
@@ -352,8 +353,8 @@ print("Setup Complete")
 for key, value in iteritems(initial_dvs):
     prob[key] = value
 
-prob.run_model()
+#prob.run_model()
 
-#prob.run_driver()
+prob.run_driver()
 
 
