@@ -21,13 +21,16 @@ class AMIEGO_With_Pre(AMIEGO_driver):
         price = alloc_data['price_pax', 'CRM']
         route = alloc_data['range_km']
 
-        x1_path = 'allocation_mission_group.revenue_comp.x1'
-        x2_path = 'allocation_mission_group.revenue_comp.x2'
-        y1_path = 'allocation_mission_group.revenue_comp.y1'
-        y2_path = 'allocation_mission_group.revenue_comp.y2'
-        z1_path = 'allocation_mission_group.revenue_comp.z1'
+        prom2abs = self._problem.model._var_allprocs_prom2abs_list['output']
 
-        trip = self.get_design_var_values()['allocation_mission_group.revenue_comp.flt_day'].T
+        x1_path = prom2abs['x1']
+        x2_path = prom2abs['x2']
+        y1_path = prom2abs['y1']
+        y2_path = prom2abs['y2']
+        z1_path = prom2abs['z1']
+        flt_day_path = prom2abs['flt_day']
+
+        trip = self.get_design_var_values()[flt_day_path].T
 
         seats = []
         for key in allocation_data['names']:
