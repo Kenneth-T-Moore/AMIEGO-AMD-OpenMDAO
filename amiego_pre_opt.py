@@ -3,6 +3,8 @@ Inherits from Amiego driver to assign the pre continuous optimization hook.
 """
 from six.moves import range
 
+import numpy as np
+
 from openmdao.drivers.amiego_driver import AMIEGO_driver
 
 
@@ -64,3 +66,7 @@ class AMIEGO_With_Pre(AMIEGO_driver):
         self.cont_opt._designvars[y1_path]['lower'] = y1
         self.cont_opt._designvars[y2_path]['lower'] = y2
         self.cont_opt._designvars[z1_path]['lower'] = z1
+
+
+if __name__ == '__main__':
+    z = AMIEGO_With_Pre()
