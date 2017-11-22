@@ -33,7 +33,7 @@ class AMIEGO_With_Pre(AMIEGO_driver):
         trip = self.get_design_var_values()[flt_day_path].T
 
         seats = []
-        for key in allocation_data['names']:
+        for key in alloc_data['names']:
             seats.append(alloc_data['capacity', key])
         seats = np.array(seats)
 
