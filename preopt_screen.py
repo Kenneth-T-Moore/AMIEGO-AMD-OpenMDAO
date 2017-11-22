@@ -32,7 +32,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         if run_flag:
 
             # Do continuous optimization
-            _ = super(pyOptSparseWithScreening, self).run()
+            fail = super(pyOptSparseWithScreening, self).run()
 
             try:
                 code = self.pyopt_solution.optInform['value']
@@ -42,14 +42,14 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
 
             # Call it a sucess when current point can't be improved.
             if code[0] == 41:
-                self.success = True
+                fail = False
 
             cons = self.get_constraint_values()
             tol = self.opt.getOption('Major feasibility tolerance')
             tol_opt = self.opt.getOption('Major optimality tolerance')
 
             print(code[0])
-            print(self.success)
+            print(fail)
 
             # If solution is feasible we proceed with it
             con_meta = self._cons
@@ -71,10 +71,6 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
                     break
 
             if feasible:
-
-                # Soln is feasible; obj and cons already in openmdao.
-                self.success = True
-
                 # Always return success if feasible, even when opt fails.
                 return False
 
