@@ -32,7 +32,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         if run_flag:
 
             # Do continuous optimization
-            super(pyOptSparseWithScreening, self).run()
+            _ = super(pyOptSparseWithScreening, self).run()
 
             try:
                 code = self.pyopt_solution.optInform['value']
@@ -74,7 +74,9 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
 
                 # Soln is feasible; obj and cons already in openmdao.
                 self.success = True
-                return
+
+                # Always return success if feasible, even when opt fails.
+                return False
 
         else:
 
@@ -95,6 +97,8 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
                 # This can only happen under MPI when a constraint is only on a subset of procs.
                 except KeyError:
                     pass
+
+        return True
 
 
     def preopt_screen(self):

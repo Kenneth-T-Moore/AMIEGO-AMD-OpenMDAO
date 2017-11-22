@@ -284,10 +284,10 @@ class Profit(ExplicitComponent):
                 if x_kj > 0:
                     LF = int(round(10.0*pax[jj, kk]/allocation_data['capacity', name]))
                     ##TODO #This convention is different in matlab version (3D): dim1-routes,dim2-aircraft, dim3-LF
-                    cost_kj = allocation_data['TotCost_LF'][ind_ac, jj, LF-1]
-                    BH_kj = allocation_data['BH_LF'][ind_ac, jj, LF-1]
+                    cost_kj = allocation_data['TotCost_LF'][ind_ac, jj, LF]
+                    BH_kj = allocation_data['BH_LF'][ind_ac, jj, LF]
                     MH_FH_kj = allocation_data['maint', name]
-                    fuel_kj = allocation_data['fuelburn_LF'][ind_ac, jj, LF-1]
+                    fuel_kj = allocation_data['fuelburn_LF'][ind_ac, jj, LF]
 
                 else:
                     cost_kj = 0.0
