@@ -269,6 +269,11 @@ class Profit(ExplicitComponent):
                     MH_FH_kj = 0.0
                     fuel_kj = 0.0
 
+                print('new', ind_nac, jj)
+                print('cost_kj', cost_kj)
+                print('BH_kj', BH_kj)
+                print('MH_FH_kj', MH_FH_kj)
+                print('fuel_kj', fuel_kj)
                 cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
@@ -301,11 +306,18 @@ class Profit(ExplicitComponent):
                     MH_FH_kj = 0.0
                     fuel_kj = 0.0
 
+                print('exist', ind_ac, jj)
+                print('cost_kj', cost_kj)
+                print('BH_kj', BH_kj)
+                print('MH_FH_kj', MH_FH_kj)
+                print('fuel_kj', fuel_kj)
                 cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
             g_aircraft_exist[ind_ac] = (con_val/(12.0*allocation_data['number', name]))
 
+        print('rev', rev)
+        print('cost', cost)
         outputs['profit'] = (np.sum(rev) - cost)/-1.0e3
         outputs['g_demand'] = tot_pax/allocation_data['demand']
         outputs['g_aircraft_new'] = g_aircraft_new
