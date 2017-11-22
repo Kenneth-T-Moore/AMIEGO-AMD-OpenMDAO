@@ -112,10 +112,15 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         model._solve_nonlinear()
         self.allocation_data['scale_fac'] = 1.0
 
-        profit = self.get_objective_values()['profit']
+        prom2abs = self._problem.model._var_allprocs_prom2abs_list['output']
+        profit_key = prom2abs['profit'][0]
+        conkey1 = prom2abs['g_aircraft_new'][0]
+        conkey2 = prom2abs['g_aircraft_exist'][0]
+
+        profit = self.get_objective_values()[profit_key]
         cons = self.get_constraint_values()
 
-        for key in ['g_aircraft_new', 'g_aircraft_exist']:
+        for key in [conkey1, conkey2]:
             con = cons[key]
             for kk in range(len(con)):
                 if con[kk] > (1.0 + 1.0e-6): #New aircraft check within 1%, hoping optimizer can make it feasible
