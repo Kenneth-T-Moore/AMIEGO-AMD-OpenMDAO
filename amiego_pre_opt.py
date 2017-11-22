@@ -63,11 +63,11 @@ class AMIEGO_With_Pre(AMIEGO_driver):
                 x1[jj] = np.floor(1.5*alp[0, 0]/bet[0, 0])
                 x2[jj] = np.floor(1.5*alp[0, 1]/bet[0, 1])
 
-        self.cont_opt._designvars[x1_path]['lower'] = x1
-        self.cont_opt._designvars[x2_path]['lower'] = x2
-        self.cont_opt._designvars[y1_path]['lower'] = y1
-        self.cont_opt._designvars[y2_path]['lower'] = y2
-        self.cont_opt._designvars[z1_path]['lower'] = z1
+        self.cont_opt._designvars[x1_path]['upper'] = x1
+        self.cont_opt._designvars[x2_path]['upper'] = x2
+        self.cont_opt._designvars[y1_path]['upper'] = y1
+        self.cont_opt._designvars[y2_path]['upper'] = y2
+        self.cont_opt._designvars[z1_path]['upper'] = z1
 
 
 if __name__ == '__main__':
