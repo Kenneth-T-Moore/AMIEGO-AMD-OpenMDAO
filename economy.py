@@ -267,6 +267,7 @@ class Profit(ExplicitComponent):
                     cost_kj = 0.0
                     BH_kj=0.0
                     MH_FH_kj = 0.0
+                    fuel_kj = 0.0
 
                 cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
