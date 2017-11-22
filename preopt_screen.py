@@ -89,8 +89,13 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
             problem.model._outputs[obj] = apx_profit
 
             for name, value in iteritems(apx_cons):
-                # problem.model._outputs[name] = value[2:]
-                problem.model._outputs[name] = value
+                try:
+                    problem.model._outputs[name] = value
+
+                # This can only happen under MPI when a constraint is only on a subset of procs.
+                except KeyError:
+                    pass
+
 
     def preopt_screen(self):
         """
