@@ -322,6 +322,7 @@ prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
 prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-3
 prob.driver.cont_opt.opt_settings['Major feasibility tolerance'] = 1e-3
 prob.driver.cont_opt.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
+prob.driver.allocation_data = allocation_data
 
 # Load in initial sample points
 sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
