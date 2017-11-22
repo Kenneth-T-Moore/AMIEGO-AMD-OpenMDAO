@@ -325,7 +325,7 @@ prob.driver.cont_opt.opt_settings['Print file'] = os.path.join(output_dir, snopt
 
 # Load in initial sample points
 sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
-prob.driver.sampling = {'flt_day' : [np.array([item]) for item in sample_data]}
+prob.driver.sampling = {'flt_day' : sample_data}
 
 # KEN - Setting up case recorders with this many vars takes forever.
 #system_includes = []
