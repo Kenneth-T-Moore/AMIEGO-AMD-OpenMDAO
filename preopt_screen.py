@@ -79,7 +79,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         else:
 
             # Poke approximate profit and constraint values.
-            print("Failed Pre-Opt!")
+            print("Skipping this Pre-Opt!")
             print("profit", apx_profit)
             print("cons", apx_cons)
             self.success = False
