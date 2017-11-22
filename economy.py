@@ -269,12 +269,12 @@ class Profit(ExplicitComponent):
                     MH_FH_kj = 0.0
                     fuel_kj = 0.0
 
-                print('new', ind_nac, jj)
-                print('cost_kj', cost_kj)
-                print('BH_kj', BH_kj)
-                print('MH_FH_kj', MH_FH_kj)
-                print('fuel_kj', fuel_kj)
-                print('x_kj', x_kj)
+                #print('new', ind_nac, jj)
+                #print('cost_kj', cost_kj)
+                #print('BH_kj', BH_kj)
+                #print('MH_FH_kj', MH_FH_kj)
+                #print('fuel_kj', fuel_kj)
+                #print('x_kj', x_kj)
                 cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 

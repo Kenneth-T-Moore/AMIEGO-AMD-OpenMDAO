@@ -327,9 +327,12 @@ prob.driver.allocation_data = allocation_data
 prob.driver.cont_opt.allocation_data = allocation_data
 prob.driver.minlp.options['trace_iter'] = 5
 
-# Load in initial sample points
+# Load in initial sample points.
 sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
-prob.driver.sampling = {'flt_day' : sample_data}
+xpose_sample = np.empty(sample_data.shape)
+for j in range(sample_data.shape[0]):
+    xpose_sample[j, :] = sample_data[j, :].reshape(3, 11).T.flatten()
+prob.driver.sampling = {'flt_day' : xpose_sample}
 
 # KEN - Setting up case recorders with this many vars takes forever.
 #system_includes = []
