@@ -260,7 +260,7 @@ class Profit(ExplicitComponent):
 
                     MH_FH_kj = allocation_data['maint', name]
                     fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
-                    fuel_kj = inputs[fuelburn_name]
+                    fuel_kj = inputs[fuelburn_name]*1e6
                     cost_kj = allocation_data['cost_other', name][jj]
 
                 else:
