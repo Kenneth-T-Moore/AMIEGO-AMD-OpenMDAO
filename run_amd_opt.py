@@ -1,6 +1,10 @@
-import numpy as np
+"""
+Run Amiego plus AMD
+"""
 import pickle
 import os
+
+import numpy as np
 
 from six import iteritems
 
