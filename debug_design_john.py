@@ -3,9 +3,12 @@ Example of an ADFLOW problem that gave negative volumes and locked up on writing
 """
 import os
 
+from six import iteritems
+
 import numpy as np
 
 from openmdao.api import Problem, Group
+from openmdao.parallel_api import PETScVector
 
 from amd_om.design.design_group import DesignGroup
 from amd_om.design.utils.flight_conditions import get_flight_conditions
@@ -15,6 +18,7 @@ from amd_om.utils.pre_setup import aeroOptions, meshOptions
 
 
 flight_conditions = get_flight_conditions()
+aircraft_data = get_aircraft_data()
 
 aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writesurfacesolution' : False,
@@ -87,3 +91,5 @@ for key, value in iteritems(initial_dvs):
     prob[key] = value
 
 prob.run_driver()
+
+print("Execution Completed!")
