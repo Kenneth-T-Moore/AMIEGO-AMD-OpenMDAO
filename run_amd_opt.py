@@ -10,6 +10,7 @@ from six import iteritems
 
 from openmdao.api import Problem, Group, IndepVarComp, NonlinearBlockGS, LinearBlockGS, ExecComp
 from openmdao.parallel_api import PETScVector
+from openmdao.utils.mpi import MPI
 
 from amd_om.design.design_group import DesignGroup
 from amd_om.design.utils.flight_conditions import get_flight_conditions
@@ -257,6 +258,17 @@ class AllocationMissionDesignGroup(Group):
 
 #-------------------------------------------------------------------------
 
+# Give meshes their own directory based on proc rank.
+grid_dir = '/nobackupp2/ktmoore1/run1'
+if MPI:
+    rank = MPI.COMM_WORLD.rank
+    grid_dir += '/' + str(rank)
+
+    # Make sure path exists:
+    if not os.path.isdir(grid_dir):
+        os.makedirs(grid_dir)
+
+
 this_dir = os.path.split(__file__)[0]
 if not this_dir.endswith('/'):
     this_dir += '/'
@@ -269,7 +281,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
                'grad_scaler' : 10.,
-               'outputDirectory' : '/nobackupp2/ktmoore1/run1'
+               'outputDirectory' : grid_dir
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
