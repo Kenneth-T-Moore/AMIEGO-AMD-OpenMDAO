@@ -1,13 +1,13 @@
 #PBS -S /bin/bash
 #PBS -N AMIEGO
-#PBS -l select=6:ncpus=24:model=has
-#PBS -l walltime=12:00:00
+#PBS -l select=1:ncpus=1:mpiprocs=1:model=bro+6:ncpus=28:mpiprocs=28:model=bro
+#PBS -l walltime=24:00:00
 #PBS -j oe
 #PBS -W group_list=a1607
 #PBS -m bae
 #PBS -o stdout.out
 #PBS -e stderr.out
-#PBS -q normal
+#PBS -q long
 
 source ~/.bashrc
 
