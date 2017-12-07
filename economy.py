@@ -10,26 +10,27 @@ import numpy as np
 from openmdao.api import ExplicitComponent
 
 
+# Attractiveness coefficients for fare classes
+a = np.array([0.864, -0.038])
+b = np.array([-0.02, 0.016])
+c = np.array([0.009, 0.008])
+
+
 def calc_revenue(x1, y1, x2, y2, z1, alpha, beta, Cap):
-    # Attractiveness coefficients for fare classes
-    a = np.array([0.864, -0.038])
-    b = np.array([-0.02, 0.016])
-    c = np.array([0.009, 0.008])
 
     x = np.array([x1, x2])
     y = np.array([y1, y2])
 
-    mu = alpha - beta*y
+    ntot = alpha - beta*y
     p = 1.0/(1.0 + np.exp(a - b*y + c*x))
 
-    ntot = mu
-    nacc = np.zeros((2,))
-    R = np.zeros((2,))
+    nacc = np.zeros((2, ))
+    R = np.zeros((2, ))
 
-    nacc[0] = min(ntot[0],z1)
+    nacc[0] = min(ntot[0], z1)
     R[0] = (p[0]*x[0] + (1.0 - p[0])*y[0])*nacc[0]
 
-    nacc[1] = min(ntot[1],(Cap - nacc[0]))
+    nacc[1] = min(ntot[1], (Cap - nacc[0]))
     R[1] = (p[1]*x[1] + (1.0 - p[1])*y[1])*nacc[1]
 
     Rev = np.sum(R)
@@ -106,7 +107,7 @@ class RevenueManager(ExplicitComponent):
         self.add_output('tot_pax', shape=(num_routes, ))
 
         # TODO: Really would be better with anaytic derivs.
-        self.declare_partials(of='*', wrt='*', method='fd')
+        self.declare_partials(of='*', wrt='*')
 
         # Calculate Demand bounds for each route.
         self.alpha = np.empty((num_routes, 2))
@@ -166,6 +167,79 @@ class RevenueManager(ExplicitComponent):
         outputs['revenue'] = rev
         outputs['tot_pax'] = tot_pax
 
+    def compute_partials(self, inputs, partials):
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+
+        seats = []
+        for key in allocation_data['names']:
+            seats.append(allocation_data['capacity', key])
+        seats = np.array(seats)
+
+        trip = inputs['flt_day']
+        x1 = inputs['revenue:x1']
+        y1 = inputs['revenue:y1']
+        x2 = inputs['revenue:x2']
+        y2 = inputs['revenue:y2']
+        z1 = inputs['revenue:z1']
+
+        max_avail_seats = seats.dot(trip.T)
+        alpha = self.alpha
+        beta = self.beta
+
+        for jj in range(num_routes):
+            Cap = max_avail_seats[jj]
+            if Cap == 0:
+                continue
+
+            # Combined for ease
+            x = np.array([x1[jj], x2[jj]])
+            y = np.array([y1[jj], y2[jj]])
+
+            ntot = alpha[jj, :] - beta[jj, :]*y
+            dntot_dy = -beta[jj, :]
+
+            p = 1.0/(1.0 + np.exp(a - b*y + c*x))
+            fact = -np.exp(a - b*y + c*x)*p**2
+            dp_dy = -fact*b
+            dp_dx = fact*c
+
+            if ntot[0] > z1[jj]:
+                nacc0 = z1[jj]
+                dnacc0_dy = 0.0
+                dnacc0_dz = 1.0
+            else:
+                nacc0 = ntot[0]
+                dnacc0_dy = dntot_dy[0]
+                dnacc0_dz = 0.0
+
+            dR0_dx = nacc0 * (p[0] + (x[0] - y[0])*dp_dx)
+            dR0_dy = nacc0 * ((1.0 - p[0]) + (x[0] - y[0])*dp_dy) + \
+                    (p[0]*x[0] + (1.0 - p[0])*y[0])*dnacc0_dy
+            dR0_dz = (p[0]*x[0] + (1.0 - p[0])*y[0])*dnacc0_dz
+
+            if ntot[1] > (Cap - nacc0):
+                nacc1 = (Cap - nacc0)
+                dnacc1_dy = -dnacc0_dy
+                dnacc1_dz = -dnacc0_dz
+            else:
+                nacc1 = ntot[1]
+                dnacc1_dy = dntot_dy[1]
+                dnacc1_dz = 0.0
+
+            dR1_dx = nacc1 * (p[1] + (x[1] - y[1])*dp_dx)
+            dR1_dy = nacc1 * ((1.0 - p[1]) + (x[1] - y[1])*dp_dy) + \
+                    (p[1]*x[1] + (1.0 - p[1])*y[1])*dnacc1_dy
+            dR1_dz = (p[1]*x[1] + (1.0 - p[1])*y[1])*dnacc1_dz
+
+            partials['revenue', 'revenue:x1'][jj] = dR0_dx[0] + dR1_dx[0]
+            partials['revenue', 'revenue:x2'][jj] = dR0_dx[1] + dR1_dx[1]
+            partials['revenue', 'revenue:y1'][jj] = dR0_dy[0] + dR1_dy[0]
+            partials['revenue', 'revenue:y2'][jj] = dR0_dy[1] + dR1_dy[1]
+            partials['revenue', 'revenue:z1'][jj] = dR0_dz + dR1_dz
+
+            #sum_nacc = np.sum(nacc)
+            #return Rev, sum_nacc, nacc, p, ntot
 
 class Profit(ExplicitComponent):
     """
@@ -390,3 +464,5 @@ if __name__ == '__main__':
     print('g_demand', prob['g_demand'])
     print('g_aircraft_new', prob['g_aircraft_new'])
     print('g_aircraft_exist', prob['g_aircraft_exist'])
+
+    prob.check_partials(comps=['revenue'])
