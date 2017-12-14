@@ -106,8 +106,8 @@ class RevenueManager(ExplicitComponent):
         self.add_output('revenue', shape=(num_routes, ))
         self.add_output('tot_pax', shape=(num_routes, ))
 
-        # TODO: Really would be better with anaytic derivs.
-        self.declare_partials(of='*', wrt='*')
+        # Derivs of everything wrt just the continuous vars.
+        self.declare_partials(of='*', wrt='revenue*')
 
         # Calculate Demand bounds for each route.
         self.alpha = np.empty((num_routes, 2))
@@ -251,9 +251,11 @@ class RevenueManager(ExplicitComponent):
                 x_kj = trip[jj, kk]
                 if x_kj > 0.0 and sum_nacc < max_avail_seats[jj]:
                     fact = seats[kk] / max_avail_seats[jj]
-                    partials['pax_flt', 'revenue:y1'][jj, kk] = dnacc0_dy * fact
-                    partials['pax_flt', 'revenue:y2'][jj, kk] = dnacc1_dy * fact
-                    partials['pax_flt', 'revenue:z1'][jj, kk] = (dnacc0_dz + dnacc1_dz) * fact
+                    ii = jj * num_ac + kk
+                    partials['pax_flt', 'revenue:y1'][ii, jj] = dnacc0_dy * fact
+                    partials['pax_flt', 'revenue:y2'][ii, jj] = dnacc1_dy * fact
+                    partials['pax_flt', 'revenue:z1'][ii, jj] = (dnacc0_dz + dnacc1_dz) * fact
+
 
 class Profit(ExplicitComponent):
     """
@@ -293,7 +295,9 @@ class Profit(ExplicitComponent):
         self.add_output('g_demand', shape=(num_routes, ))
 
         # TODO: Really would be better with anaytic derivs.
-        self.declare_partials(of='*', wrt='*', method='fd')
+        #self.declare_partials(of='*', wrt='*')
+        self.declare_partials(of='*', wrt=['revenue', 'pax_flt', 'tot_pax', '*fuel*', '*block*'])
+        self.set_check_partial_options(wrt=['revenue'], step=1e-1)
 
     def _get_fuelburn_name(self, ind_rt, ind_ac=None, ind_nac=None):
         allocation_data = self.metadata['allocation_data']
@@ -412,6 +416,69 @@ class Profit(ExplicitComponent):
         outputs['g_aircraft_new'] = g_aircraft_new
         outputs['g_aircraft_exist'] = g_aircraft_exist
 
+    def compute_partials(self, inputs, partials):
+        allocation_data = self.metadata['allocation_data']
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
+        num_ac = num_existing_aircraft + num_new_aircraft
+
+        trip = inputs['flt_day']
+        rev = inputs['revenue']
+        pax = inputs['pax_flt']
+        tot_pax = inputs['tot_pax']
+        cost_fuel_N = self.metadata['general_allocation_data']['cost_fuel_N']
+
+        pfact = 1.0/1.0e3
+
+        #New aircraft
+        for ind_nac in range(num_new_aircraft):
+            name = allocation_data['new_names'][ind_nac]
+            fact = 1.0/(12.0 * allocation_data['number', name])
+            for jj in range(num_routes):
+                x_kj = trip[jj, ind_nac]
+
+                blocktime_name = self._get_blocktime_name(jj, ind_nac=ind_nac)
+                BH_kj = inputs[blocktime_name]*allocation_data['scale_fac']
+
+                MH_FH_kj = allocation_data['maint', name]
+                fuelburn_name = self._get_fuelburn_name(jj, ind_nac=ind_nac)
+                fuel_kj = inputs[fuelburn_name]*1e6
+                cost_kj = allocation_data['cost_other', name][jj]
+
+                # ii = jj * num_ac + ind_nac
+                # partials['g_aircraft_new', 'flt_day'][ind_nac][ii] = (BH_kj*(1.0 + MH_FH_kj) + 1.0)*fact
+                partials['g_aircraft_new', blocktime_name][ind_nac][0] = x_kj*(1.0 + MH_FH_kj)*fact
+
+                # partials['profit', 'flt_day'][0][ii] = (cost_kj + fuel_kj*cost_fuel_N) * pfact
+                partials['profit', fuelburn_name][0][0] = 1e6 * cost_fuel_N * x_kj* pfact
+
+        #Existing aircraft
+        for ind_ac in range(num_existing_aircraft):
+            kk = num_new_aircraft + ind_ac
+            name = allocation_data['existing_names'][ind_ac]
+            fact = 1.0/(12.0 * allocation_data['number', name])
+            for jj in range(num_routes):
+                if allocation_data['cost_other', name][jj] < 1.0e10:
+
+                    x_kj = trip[jj, kk]
+
+                    # NOTE : Ignoring LF because of lack of data.
+                    cost_kj = allocation_data['cost_other', name][jj]
+                    BH_kj = allocation_data['block_time_hr', name][jj]
+                    MH_FH_kj = allocation_data['maint', name]
+                    fuel_kj = allocation_data['fuel_N', name][jj]
+
+                    # partials['profit', 'flt_day'][0][jj] += (cost_kj + fuel_kj*cost_fuel_N) * pfact
+
+                    # ii = jj * num_existing_aircraft + ind_ac
+                    # partials['g_aircraft_exist', 'flt_day'][ind_ac][ii] = (BH_kj*(1.0 + MH_FH_kj) + 1.0)*fact
+
+
+
+        partials['profit', 'revenue'][0][:] = -pfact
+        partials['g_demand', 'tot_pax'] = np.diag(1.0/allocation_data['demand'])
+
 
 if __name__ == '__main__':
     from openmdao.api import Problem, Group, IndepVarComp
@@ -479,5 +546,5 @@ if __name__ == '__main__':
     print('g_aircraft_new', prob['g_aircraft_new'])
     print('g_aircraft_exist', prob['g_aircraft_exist'])
 
-    prob.check_partials(comps=['revenue'], step=1.0e-5)
+    prob.check_partials(step=1.0e-5, compact_print=True)
     #prob.check_partials(comps=['revenue'], compact_print=True)
