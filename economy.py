@@ -46,8 +46,8 @@ def demand_bounds(dem, price, range_route):
     p2 = price*k
     p1 = price*(1.0 - k*LF2)/LF1
 
-    alp1, bet1 = price_elasticity(LF1,dem,p1,range_route)
-    alp2, bet2 = price_elasticity(LF2,dem,p2,range_route)
+    alp1, bet1 = price_elasticity(LF1, dem, p1, range_route)
+    alp2, bet2 = price_elasticity(LF2, dem, p2, range_route)
 
     alpha = np.array([[alp1,alp2]])
     beta = np.array([[bet1,bet2]])
@@ -147,6 +147,7 @@ class RevenueManager(ExplicitComponent):
         # Main Revenue calculation.
         rev = np.zeros((num_routes, ))
         pax = np.zeros((num_routes, num_ac))
+        test = np.zeros((num_routes, 2))
         tot_pax = np.empty((num_routes, ))
         for jj in range(num_routes):
             if max_avail_seats[jj] > 0:
@@ -170,6 +171,9 @@ class RevenueManager(ExplicitComponent):
     def compute_partials(self, inputs, partials):
         allocation_data = self.metadata['allocation_data']
         num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
+        num_ac = num_existing_aircraft + num_new_aircraft
 
         seats = []
         for key in allocation_data['names']:
@@ -213,8 +217,8 @@ class RevenueManager(ExplicitComponent):
                 dnacc0_dy = dntot_dy[0]
                 dnacc0_dz = 0.0
 
-            dR0_dx = nacc0 * (p[0] + (x[0] - y[0])*dp_dx)
-            dR0_dy = nacc0 * ((1.0 - p[0]) + (x[0] - y[0])*dp_dy) + \
+            dR0_dx = nacc0 * (p[0] + (x[0] - y[0])*dp_dx[0])
+            dR0_dy = nacc0 * ((1.0 - p[0]) + (x[0] - y[0])*dp_dy[0]) + \
                     (p[0]*x[0] + (1.0 - p[0])*y[0])*dnacc0_dy
             dR0_dz = (p[0]*x[0] + (1.0 - p[0])*y[0])*dnacc0_dz
 
@@ -227,19 +231,29 @@ class RevenueManager(ExplicitComponent):
                 dnacc1_dy = dntot_dy[1]
                 dnacc1_dz = 0.0
 
-            dR1_dx = nacc1 * (p[1] + (x[1] - y[1])*dp_dx)
-            dR1_dy = nacc1 * ((1.0 - p[1]) + (x[1] - y[1])*dp_dy) + \
+            dR1_dx = nacc1 * (p[1] + (x[1] - y[1])*dp_dx[1])
+            dR1_dy = nacc1 * ((1.0 - p[1]) + (x[1] - y[1])*dp_dy[1]) + \
                     (p[1]*x[1] + (1.0 - p[1])*y[1])*dnacc1_dy
             dR1_dz = (p[1]*x[1] + (1.0 - p[1])*y[1])*dnacc1_dz
 
-            partials['revenue', 'revenue:x1'][jj] = dR0_dx[0] + dR1_dx[0]
-            partials['revenue', 'revenue:x2'][jj] = dR0_dx[1] + dR1_dx[1]
-            partials['revenue', 'revenue:y1'][jj] = dR0_dy[0] + dR1_dy[0]
-            partials['revenue', 'revenue:y2'][jj] = dR0_dy[1] + dR1_dy[1]
-            partials['revenue', 'revenue:z1'][jj] = dR0_dz + dR1_dz
+            partials['revenue', 'revenue:x1'][jj][jj] = dR0_dx
+            partials['revenue', 'revenue:x2'][jj][jj] = dR1_dx
+            partials['revenue', 'revenue:y1'][jj][jj] = dR0_dy
+            partials['revenue', 'revenue:y2'][jj][jj] = dR1_dy
+            partials['revenue', 'revenue:z1'][jj][jj] = dR0_dz + dR1_dz
 
-            #sum_nacc = np.sum(nacc)
-            #return Rev, sum_nacc, nacc, p, ntot
+            sum_nacc = nacc0 + nacc1
+            partials['tot_pax', 'revenue:y1'][jj][jj] = dnacc0_dy
+            partials['tot_pax', 'revenue:y2'][jj][jj] = dnacc1_dy
+            partials['tot_pax', 'revenue:z1'][jj][jj] = dnacc0_dz + dnacc1_dz
+
+            for kk in range(num_ac):
+                x_kj = trip[jj, kk]
+                if x_kj > 0.0 and sum_nacc < max_avail_seats[jj]:
+                    fact = seats[kk] / max_avail_seats[jj]
+                    partials['pax_flt', 'revenue:y1'][jj, kk] = dnacc0_dy * fact
+                    partials['pax_flt', 'revenue:y2'][jj, kk] = dnacc1_dy * fact
+                    partials['pax_flt', 'revenue:z1'][jj, kk] = (dnacc0_dz + dnacc1_dz) * fact
 
 class Profit(ExplicitComponent):
     """
@@ -465,4 +479,5 @@ if __name__ == '__main__':
     print('g_aircraft_new', prob['g_aircraft_new'])
     print('g_aircraft_exist', prob['g_aircraft_exist'])
 
-    prob.check_partials(comps=['revenue'])
+    prob.check_partials(comps=['revenue'], step=1.0e-5)
+    #prob.check_partials(comps=['revenue'], compact_print=True)
