@@ -186,11 +186,11 @@ class AllocationMissionGroup(Group):
                 demand_constraint[ind_rt, ind_ac] = allocation_data['capacity', aircraft_name]
 
         self.add_design_var('flt_day', lower=flt_day_lower, upper=flt_day_upper)
-        self.add_design_var('revenue:x1', lower=0.0)
-        self.add_design_var('revenue:y1', lower=0.0)
-        self.add_design_var('revenue:x2', lower=0.0)
-        self.add_design_var('revenue:y2', lower=0.0)
-        self.add_design_var('revenue:z1', lower=0.0)
+        self.add_design_var('revenue:x1', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:y1', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:x2', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:y2', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:z1', lower=0.0, ref=1.0e3)
         self.add_objective('profit')
 
 
@@ -368,7 +368,7 @@ if record:
     recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
     prob.driver.add_recorder(recorder)
     prob.driver.recording_options['record_metadata'] = False
-    #prob.driver.recording_options['includes'] = system_includes
+    prob.driver.recording_options['includes'] = []
 
 print("Running Setup")
 prob.setup(vector_class=PETScVector)
