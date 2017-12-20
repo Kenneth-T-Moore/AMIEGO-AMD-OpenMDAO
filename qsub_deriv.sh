@@ -7,7 +7,7 @@
 #PBS -m bae
 #PBS -o stdout.out
 #PBS -e stderr.out
-#PBS -q debug
+#PBS -q normal
 
 source ~/.bashrc
 
