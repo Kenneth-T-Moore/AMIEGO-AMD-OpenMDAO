@@ -518,19 +518,31 @@ if __name__ == '__main__':
                                          allocation_data=allocation_data),
                         promotes=['*'])
 
-    prob.setup()
-
     xC0_rev = 1.0e3*np.array([[ 4.3460,    1.3430,    1.7560,    0.7062,    3.6570,    0.6189,    1.3200,    1.3890,    0.9810,    2.4250,    1.9650],
                               [ 2.6318,    0.4475,    0.5851,    0.2357,    1.2197,    0.2159,    0.4400,    0.4629,    0.3269,    0.7980,    0.6416],
                               [ 6.0180,    1.1577,    1.5140,    0.6311,    3.1820,    0.7101,    1.1561,    1.2043,    0.8479,    2.1036,    1.6272],
                               [ 3.7277,    0.6471,    0.8467,    0.3331,    1.7368,    0.3450,    0.6442,    0.6730,    0.4673,    1.1667,    0.9138],
                               [ 0.3000,    3.1920,    4.1120,    2.2420,    1.2480,    0.3000,    0.7160,    1.8960,    2.2640,    0.4160,    0.4160]])
 
-    prob['revenue:x1'] = xC0_rev[0, :]
-    prob['revenue:y1'] = xC0_rev[1, :]
-    prob['revenue:x2'] = xC0_rev[2, :]
-    prob['revenue:y2'] = xC0_rev[3, :]
-    prob['revenue:z1'] = xC0_rev[4, :]
+    dd.add_output('revenue:x1', xC0_rev[0, :])
+    dd.add_output('revenue:y1', xC0_rev[1, :])
+    dd.add_output('revenue:x2', xC0_rev[2, :])
+    dd.add_output('revenue:y2', xC0_rev[3, :])
+    dd.add_output('revenue:z1', xC0_rev[4, :])
+
+    #prob['revenue:x1'] = xC0_rev[0, :]
+    #prob['revenue:y1'] = xC0_rev[1, :]
+    #prob['revenue:x2'] = xC0_rev[2, :]
+    #prob['revenue:y2'] = xC0_rev[3, :]
+    #prob['revenue:z1'] = xC0_rev[4, :]
+
+    model.add_design_var('revenue:x1')
+    model.add_design_var('revenue:y1')
+    model.add_design_var('revenue:x2')
+    model.add_design_var('revenue:y2')
+    model.add_design_var('revenue:z1')
+    model.add_objective('profit')
+    prob.setup()
 
     prob.run()
     print('Revenue')
@@ -548,3 +560,5 @@ if __name__ == '__main__':
 
     prob.check_partials(step=1.0e-5, compact_print=True)
     #prob.check_partials(comps=['revenue'], compact_print=True)
+
+    prob.check_totals(compact_print=True, step=1e-1)
