@@ -200,8 +200,6 @@ class AllocationMissionDesignGroup(Group):
         self.metadata.declare('aircraft_data', types=dict)
         self.metadata.declare('aeroOptions', default=None, types=dict, allow_none=True)
         self.metadata.declare('meshOptions', default=None, types=dict, allow_none=True)
-        self.metadata.declare('design_variables', types=list,
-            default=['shape', 'twist', 'sweep', 'area'])
 
         self.metadata.declare('general_allocation_data', types=dict)
         self.metadata.declare('allocation_data', types=dict)
@@ -220,7 +218,6 @@ class AllocationMissionDesignGroup(Group):
 
         flight_conditions = meta['flight_conditions']
         aircraft_data = meta['aircraft_data']
-        design_variables = meta['design_variables']
 
         if meta['aeroOptions']:
             aeroOptions.update(meta['aeroOptions'])
@@ -239,12 +236,6 @@ class AllocationMissionDesignGroup(Group):
         aerodynamics_model = meta['aerodynamics_model']
 
         initial_mission_vars = meta['initial_mission_vars']
-
-        design_group = DesignGroup(
-            flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-            aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
-        )
-        self.add_subsystem('design_group', design_group, promotes=['*'])
 
         allocation_mission_group = AllocationMissionGroup(
             general_allocation_data=general_allocation_data, allocation_data=allocation_data,
@@ -286,16 +277,8 @@ meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
 record = True
 
-design_variables = ['shape', 'twist', 'sweep', 'area']
-
 initial_dvs = {}
 
-# Loads in initial design variables for aero.
-optimum_design_filename = './_design_outputs/optimum_design.pkl'
-optimum_design_data = pickle.load(open(optimum_design_filename, 'rb'))
-#optimum_design_data = pickle.load(open(os.path.join(this_dir, optimum_design_filename), 'rb'))
-for key in ['shape', 'twist', 'sweep', 'area']:
-    initial_dvs[key] = optimum_design_data[key]
 
 initial_mission_vars = {}
 
@@ -321,7 +304,7 @@ aerodynamics_model.xt = xt
 
 
 prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-                                                  aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
+                                                  aeroOptions=aeroOptions, meshOptions=meshOptions,
                                                   general_allocation_data=general_allocation_data, allocation_data=allocation_data,
                                                   ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
                                                   propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
