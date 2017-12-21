@@ -149,8 +149,8 @@ class AllocationMissionGroup(Group):
             general_allocation_data=general_allocation_data, allocation_data=allocation_data,
         )
 
-        self.add_subsystem('revenue_comp', revenue_comp, promotes=['*'])
         self.add_subsystem('inputs_comp', inputs_comp, promotes=['*'])
+        self.add_subsystem('revenue_comp', revenue_comp, promotes=['*'])
         self.add_subsystem('allocation_group', allocation_group, promotes=['*'])
 
         demand_constraint = np.zeros((num_routes, num_aircraft))
@@ -270,5 +270,7 @@ for key, value in iteritems(initial_dvs):
 prob.run_model()
 derivs = prob.compute_totals(of=['profit'], wrt=['revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1'])
 print(derivs)
+
+print('done')
 
 
