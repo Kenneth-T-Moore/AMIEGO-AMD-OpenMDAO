@@ -23,7 +23,6 @@ from amd_om.utils.recorder_setup import get_recorder
 
 from amd_om.utils.pre_setup import aeroOptions, meshOptions
 
-from amiego_pre_opt import AMIEGO_With_Pre
 from economy import Profit, RevenueManager
 from prob_11_2_updated import allocation_data
 from prob_11_2_general_allocation import general_allocation_data
@@ -328,47 +327,6 @@ prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_condi
                                                   propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
                                                   initial_mission_vars=initial_mission_vars))
 
-snopt_file_name = 'SNOPT_print_amd.out'
-recorder_file_name = 'recorder_amd.db'
-
-prob.driver = AMIEGO_With_Pre()
-prob.driver.options['disp'] = True
-prob.driver.options['r_penalty'] = 10.0
-prob.driver.cont_opt = pyOptSparseWithScreening()
-prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
-prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-5
-prob.driver.cont_opt.opt_settings['Major feasibility tolerance'] = 1e-5
-prob.driver.cont_opt.opt_settings['Print file'] = os.path.join(output_dir, snopt_file_name)
-prob.driver.allocation_data = allocation_data
-prob.driver.cont_opt.allocation_data = allocation_data
-prob.driver.minlp.options['trace_iter'] = 5
-
-# Load in initial sample points.
-sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
-xpose_sample = np.empty(sample_data.shape)
-for j in range(sample_data.shape[0]):
-    xpose_sample[j, :] = sample_data[j, :].reshape(3, 11).T.flatten()
-prob.driver.sampling = {'flt_day' : xpose_sample}
-
-# KEN - Setting up case recorders with this many vars takes forever.
-#system_includes = []
-#system_includes.append('design_group.concatenating_comp.CLt')
-#system_includes.append('design_group.concatenating_comp.CDt')
-#for ind in range(128):
-    #msn_name = 'allocation_mission_group.multi_mission_group.mission_{}'.format(ind)
-    #system_includes.append(msn_name + '.functionals.fuelburn_comp.fuelburn_1e6_N')
-    #system_includes.append(msn_name + '.functionals.blocktime_comp.blocktime_hr')
-    #system_includes.append(msn_name + '.bsplines.comp_x.x_1e3_km')
-    #system_includes.append(msn_name + '.bsplines.comp_h.h_km')
-    #system_includes.append(msn_name + '.atmos.mach_number_comp.M')
-    #system_includes.append(msn_name + '.sys_coupled_analysis.vertical_eom_comp.CL')
-    #system_includes.append(msn_name + '.sys_coupled_analysis.aero_comp.CD')
-
-if record:
-    recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
-    prob.driver.add_recorder(recorder)
-    prob.driver.recording_options['record_metadata'] = False
-    prob.driver.recording_options['includes'] = []
 
 print("Running Setup")
 prob.setup(vector_class=PETScVector)
@@ -379,7 +337,5 @@ for key, value in iteritems(initial_dvs):
 prob.run_model()
 derivs = prob.compute_totals(of=['profit'], wrt=['revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1'])
 print(derivs)
-
-#prob.run_driver()
 
 
