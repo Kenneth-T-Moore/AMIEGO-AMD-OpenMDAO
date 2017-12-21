@@ -152,31 +152,13 @@ class AllocationMissionGroup(Group):
         revenue_comp = RevenueManager(general_allocation_data=general_allocation_data,
                                       allocation_data=allocation_data)
 
-        multi_mission_group = MultiMissionGroup(
-            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
-            ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
-            propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
-            initial_mission_vars=initial_mission_vars,
-        )
-
         allocation_group = AllocationGroup(
             general_allocation_data=general_allocation_data, allocation_data=allocation_data,
         )
 
         self.add_subsystem('revenue_comp', revenue_comp, promotes=['*'])
         self.add_subsystem('inputs_comp', inputs_comp, promotes=['*'])
-        self.add_subsystem('multi_mission_group', multi_mission_group, promotes=['*'])
         self.add_subsystem('allocation_group', allocation_group, promotes=['*'])
-
-        for ind in range(allocation_data['num']):
-            self.connect(
-                'mission_{}.fuelburn_1e6_N'.format(ind),
-                '{}_fuelburn_1e6_N'.format(ind),
-            )
-            self.connect(
-                'mission_{}.blocktime_hr'.format(ind),
-                '{}_blocktime_hr'.format(ind),
-            )
 
         demand_constraint = np.zeros((num_routes, num_aircraft))
         for ind_ac in range(num_aircraft):
@@ -286,7 +268,6 @@ num_routes = allocation_data['num']
 for ind in range(num_routes):
     optimum_mission_filename = './_mission_outputs/optimum_msn_{:03}.pkl'.format(ind)
     optimum_mission_data = pickle.load(open(optimum_mission_filename, 'rb'))
-    #optimum_mission_data = pickle.load(open(os.path.join(this_dir, optimum_mission_filename), 'rb'))
     for key in ['h_km_cp', 'M0']:
         initial_mission_vars[ind, key] = optimum_mission_data[key]
 
