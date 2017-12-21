@@ -8,25 +8,18 @@ import numpy as np
 
 from six import iteritems
 
-from openmdao.api import Problem, Group, IndepVarComp, NonlinearBlockGS, LinearBlockGS, ExecComp
+from openmdao.api import Problem, Group, IndepVarComp
 from openmdao.parallel_api import PETScVector
 from openmdao.utils.mpi import MPI
 
-from amd_om.design.design_group import DesignGroup
 from amd_om.design.utils.flight_conditions import get_flight_conditions
 from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
-from amd_om.mission_analysis.multi_mission_group import MultiMissionGroup
-from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitude, plot_single_mission_data
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
-from amd_om.utils.recorder_setup import get_recorder
-
-from amd_om.utils.pre_setup import aeroOptions, meshOptions
 
 from economy import Profit, RevenueManager
 from prob_11_2_updated import allocation_data
 from prob_11_2_general_allocation import general_allocation_data
-from preopt_screen import pyOptSparseWithScreening
 
 
 class AllocationGroup(Group):
@@ -180,8 +173,6 @@ class AllocationMissionDesignGroup(Group):
     def initialize(self):
         self.metadata.declare('flight_conditions', types=dict)
         self.metadata.declare('aircraft_data', types=dict)
-        self.metadata.declare('aeroOptions', default=None, types=dict, allow_none=True)
-        self.metadata.declare('meshOptions', default=None, types=dict, allow_none=True)
 
         self.metadata.declare('general_allocation_data', types=dict)
         self.metadata.declare('allocation_data', types=dict)
@@ -200,12 +191,6 @@ class AllocationMissionDesignGroup(Group):
 
         flight_conditions = meta['flight_conditions']
         aircraft_data = meta['aircraft_data']
-
-        if meta['aeroOptions']:
-            aeroOptions.update(meta['aeroOptions'])
-
-        if meta['meshOptions']:
-            meshOptions.update(meta['meshOptions'])
 
         general_allocation_data = meta['general_allocation_data']
         allocation_data = meta['allocation_data']
@@ -248,15 +233,6 @@ output_dir = './_amd_outputs/'
 
 flight_conditions = get_flight_conditions()
 
-aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
-               'writesurfacesolution' : False,
-               'writevolumesolution' : True,
-               'writetecplotsurfacesolution' : False,
-               'grad_scaler' : 10.,
-               'outputDirectory' : grid_dir
-               }
-meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
-
 record = True
 
 initial_dvs = {}
@@ -265,12 +241,6 @@ initial_dvs = {}
 initial_mission_vars = {}
 
 num_routes = allocation_data['num']
-for ind in range(num_routes):
-    optimum_mission_filename = './_mission_outputs/optimum_msn_{:03}.pkl'.format(ind)
-    optimum_mission_data = pickle.load(open(optimum_mission_filename, 'rb'))
-    for key in ['h_km_cp', 'M0']:
-        initial_mission_vars[ind, key] = optimum_mission_data[key]
-
 aircraft_data = get_aircraft_data()
 
 ref_area_m2 = aircraft_data['areaRef_m2']
@@ -285,7 +255,6 @@ aerodynamics_model.xt = xt
 
 
 prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-                                                  aeroOptions=aeroOptions, meshOptions=meshOptions,
                                                   general_allocation_data=general_allocation_data, allocation_data=allocation_data,
                                                   ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
                                                   propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
