@@ -7,7 +7,8 @@ from six import iteritems
 
 import numpy as np
 
-from openmdao.api import Problem, Group, Driver
+from openmdao.api import Problem, Group
+from openmdao.core.driver import Driver
 from openmdao.parallel_api import PETScVector
 
 from amd_om.design.design_group import DesignGroup
