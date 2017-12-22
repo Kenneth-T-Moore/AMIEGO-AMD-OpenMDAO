@@ -26,7 +26,7 @@ class MyDriver(Driver):
         for name, value in iteritems(dvs):
             print(name, value)
 
-        super(MyDriver, self).__init__()
+        super(MyDriver, self).run()
 
 
 flight_conditions = get_flight_conditions()
