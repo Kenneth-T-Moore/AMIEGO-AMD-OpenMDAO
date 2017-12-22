@@ -7,7 +7,7 @@ from six import iteritems
 
 import numpy as np
 
-from openmdao.api import Problem, Group
+from openmdao.api import Problem, Group, Driver
 from openmdao.parallel_api import PETScVector
 
 from amd_om.design.design_group import DesignGroup
@@ -15,6 +15,17 @@ from amd_om.design.utils.flight_conditions import get_flight_conditions
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
 
 from amd_om.utils.pre_setup import aeroOptions, meshOptions
+
+
+class MyDriver(Driver):
+
+    def run(self):
+        print("Design Vars (Scaled)")
+        dvs = self.get_design_var_values()
+        for name, value in iteritems(dvs):
+            print(name, value)
+
+        super(MyDriver, self).__init__()
 
 
 flight_conditions = get_flight_conditions()
@@ -101,6 +112,7 @@ initial_dvs['sweep'] = np.array([ 0.06380759])*10.0
 initial_dvs['area'] = np.array([ 0.10086618])*10.0
 
 prob = Problem()
+prob.driver = MyDriver()
 model = prob.model = Group()
 
 design_group = DesignGroup(
