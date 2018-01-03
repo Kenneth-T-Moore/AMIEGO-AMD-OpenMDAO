@@ -7,7 +7,7 @@ from six import iteritems
 
 import numpy as np
 
-from openmdao.api import Problem, Group
+from openmdao.api import Problem, Group, AnalysisError
 from openmdao.core.driver import Driver
 from openmdao.parallel_api import PETScVector
 
@@ -231,6 +231,9 @@ for j in range(1):
     for key, value in iteritems(initial_dvs):
         prob[key] = value
 
-    prob.run_driver()
+    try:
+        prob.run_driver()
+    except AnalysisError:
+        print("Raised Analysis Error!")
 
 print("Execution Completed!")
