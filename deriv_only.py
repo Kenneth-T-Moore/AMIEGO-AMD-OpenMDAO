@@ -268,8 +268,8 @@ for key, value in iteritems(initial_dvs):
     prob[key] = value
 
 prob.run_model()
-derivs = prob.compute_totals(of=['profit'], wrt=['revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1'])
-print(derivs)
+
+prob.check_totals()
 
 print('done')
 
