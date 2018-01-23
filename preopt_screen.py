@@ -32,52 +32,67 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
         if run_flag:
 
             # Do continuous optimization
+            print("Optimizing this Point!")
             fail = super(pyOptSparseWithScreening, self).run()
+
+            print("Fail Flag from Driver:", fail)
+
+            if not fail:
+                return False
 
             try:
                 code = self.pyopt_solution.optInform['value']
             except:
                 # Hard crash probably, so keep it as a failure.
-                return
+                print("Couldn't key into pyopt_solution.")
+                print("Fail Flag:", fail)
+                return True
 
             # Call it a sucess when current point can't be improved.
             if code[0] == 41:
-                fail = False
+                "Pyoptsparse returned Code 41: current point cannot be improved."
+            elif code[0] == 63:
+                "Pyoptsparse returned Code 63: unable to proceed into undefined region."
+            else:
+                print("Pyoptsparse returned Code", code[0])
+                return True
 
-            cons = self.get_constraint_values()
-            tol = self.opt.getOption('Major feasibility tolerance')
-            tol_opt = self.opt.getOption('Major optimality tolerance')
+            # Now, one last desparate check. For codes 41 and 63, if they look good, we
+            # keep them.
 
-            print(code[0])
-            print(fail)
+            sn_file = self.opt_settings['Print file']
 
-            # If solution is feasible we proceed with it
-            con_meta = self._cons
-            feasible = True
-            for name, meta in iteritems(con_meta):
-                val = cons[name]
-                upper = meta['upper']
-                lower = meta['lower']
-                equals = meta['equals']
+            with open(sn_file, 'r') as textfile:
+                # The text of the entire sourcefile
+                lines = textfile.readlines()
 
-                if upper is not None and any(val > upper + tol):
-                    feasible = False
-                    break
-                if lower is not None and any(val < lower - tol):
-                    feasible = False
-                    break
-                if equals is not None and any(abs(val - equals) > tol):
-                    feasible = False
+            obj = None
+
+            # Read Objective
+            for j, line in enumerate(lines):
+                if "Objective value" in line:
+                    _, obj = line.split("Objective value")
+                    obj = obj.strip()
+                    obj = float(obj)
                     break
 
-            if feasible:
-                # Always return success if feasible, even when opt fails.
+            if obj is None:
+                print("Error reading SNOPT file. Discarding point.")
+
+            # Read feasibility from last convergence line
+            line = lines[j-7]
+            if line[36] == '(':
+                print("Solution is feasible, keeping it.")
+                print("Objective:", obj)
                 return False
+            else:
+                print("Solution is not feasible. Discarding point.")
+
 
         else:
 
             # Poke approximate profit and constraint values.
-            print("Skipping this Pre-Opt!")
+            print("Skipping this Point!")
             print("profit", apx_profit)
             print("cons", apx_cons)
             self.success = False
