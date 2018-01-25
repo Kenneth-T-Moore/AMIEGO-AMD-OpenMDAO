@@ -60,7 +60,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
             # Now, one last desparate check. For codes 41 and 63, if they look good, we
             # keep them.
 
-            sn_file = self.opt_settings['Print file']
+            sn_file = self.opt_settings['Summary file']
 
             with open(sn_file, 'r') as textfile:
                 # The text of the entire sourcefile
@@ -80,8 +80,8 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
                 print("Error reading SNOPT file. Discarding point.")
 
             # Read feasibility from last convergence line
-            line = lines[j-7]
-            if line[36] == '(':
+            line = lines[j-6]
+            if line[30] == '(':
                 print("Solution is feasible, keeping it.")
                 print("Objective:", obj)
                 return False
