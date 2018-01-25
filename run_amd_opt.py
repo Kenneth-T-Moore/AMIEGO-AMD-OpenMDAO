@@ -280,7 +280,7 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writesurfacesolution' : False,
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
-               'grad_scaler' : 1e-1,
+               'grad_scaler' : 10.,
                'outputDirectory' : grid_dir
                }
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
@@ -376,7 +376,8 @@ print("Setup Complete")
 for key, value in iteritems(initial_dvs):
     prob[key] = value
 
-#prob.run_model()
+# prob.run_model()
+# prob.check_totals()
 
 prob.run_driver()
 
