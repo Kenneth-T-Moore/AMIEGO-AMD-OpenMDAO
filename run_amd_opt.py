@@ -343,6 +343,8 @@ prob.driver.allocation_data = allocation_data
 prob.driver.cont_opt.allocation_data = allocation_data
 prob.driver.minlp.options['trace_iter'] = 5
 
+prob.driver.options['debug_print'] = ['desvars']
+
 # Load in initial sample points.
 sample_data = np.loadtxt('Initialpoints_AMIEGO_AMD_11rt.dat')
 xpose_sample = np.empty(sample_data.shape)
