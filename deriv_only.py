@@ -15,6 +15,7 @@ from openmdao.utils.mpi import MPI
 from amd_om.design.utils.flight_conditions import get_flight_conditions
 from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
 from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
+from amd_om.mission_analysis.multi_mission_group import MultiMissionGroup
 from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
 
 from economy import Profit, RevenueManager
@@ -145,6 +146,13 @@ class AllocationMissionGroup(Group):
         revenue_comp = RevenueManager(general_allocation_data=general_allocation_data,
                                       allocation_data=allocation_data)
 
+        multi_mission_group = MultiMissionGroup(
+            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+            ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
+            propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+            initial_mission_vars=initial_mission_vars,
+        )
+
         allocation_group = AllocationGroup(
             general_allocation_data=general_allocation_data, allocation_data=allocation_data,
         )
@@ -216,14 +224,14 @@ class AllocationMissionDesignGroup(Group):
 #-------------------------------------------------------------------------
 
 # Give meshes their own directory based on proc rank.
-grid_dir = '/nobackupp2/ktmoore1/run1'
-if MPI:
-    rank = MPI.COMM_WORLD.rank
-    grid_dir += '/' + str(rank)
+#grid_dir = '/nobackupp2/ktmoore1/run1'
+#if MPI:
+#    rank = MPI.COMM_WORLD.rank
+#    grid_dir += '/' + str(rank)
 
     # Make sure path exists:
-    if not os.path.isdir(grid_dir):
-        os.makedirs(grid_dir)
+#    if not os.path.isdir(grid_dir):
+#        os.makedirs(grid_dir)
 
 
 this_dir = os.path.split(__file__)[0]
