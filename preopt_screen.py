@@ -60,7 +60,7 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
             # Now, one last desparate check. For codes 41 and 63, if they look good, we
             # keep them.
 
-            sn_file = self.opt_settings['Summary file']
+            sn_file = 'SNOPT_summary.out'
 
             with open(sn_file, 'r') as textfile:
                 # The text of the entire sourcefile
