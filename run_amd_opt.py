@@ -30,6 +30,12 @@ from prob_11_2_general_allocation import general_allocation_data
 from preopt_screen import pyOptSparseWithScreening
 
 
+# Remove this and go with defaults in new version of ADFLOW
+aeroOptions.pop('ANKmaxIter')
+aeroOptions.pop('ANKsecondordswitchtol')
+aeroOptions.pop('ANKcoupledswitchtol')
+
+
 class AllocationGroup(Group):
     """
     Modified version of AllocationGroup that includes part of Revenuue Management.
@@ -276,23 +282,18 @@ output_dir = './_amd_outputs/'
 
 flight_conditions = get_flight_conditions()
 
-aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
-               'writesurfacesolution' : False,
-               'writevolumesolution' : True,
-               'writetecplotsurfacesolution' : False,
-               'grad_scaler' : 10.,
-               'outputDirectory' : grid_dir,
-               'useanksolver' : True,
-               'ankswitchtol' : .1,
-               'ankcfllimit' : 50.0,
-               }
+new_aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
+                   'writesurfacesolution' : False,
+                   'writevolumesolution' : True,
+                   'writetecplotsurfacesolution' : False,
+                   'grad_scaler' : 10.,
+                   'outputDirectory' : grid_dir,
+                   'useanksolver' : True,
+                   'ankswitchtol' : .1,
+                   'ankcfllimit' : 50.0,
+                   }
 
-# Remove this and go with defaults in new version of ADFLOW
-aeroOptions.pop('ANKmaxIter')
-aeroOptions.pop('ANKsecondordswitchtol')
-aeroOptions.pop('ANKcoupledswitchtol')
-
-meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
+new_meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
 record = True
 
@@ -331,7 +332,7 @@ aerodynamics_model.xt = xt
 
 
 prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_conditions, aircraft_data=aircraft_data,
-                                                  aeroOptions=aeroOptions, meshOptions=meshOptions, design_variables=design_variables,
+                                                  aeroOptions=new_aeroOptions, meshOptions=new_meshOptions, design_variables=design_variables,
                                                   general_allocation_data=general_allocation_data, allocation_data=allocation_data,
                                                   ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
                                                   propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
