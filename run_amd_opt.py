@@ -30,10 +30,10 @@ from prob_11_2_general_allocation import general_allocation_data
 from preopt_screen import pyOptSparseWithScreening
 
 
-# Remove this and go with defaults in new version of ADFLOW
-aeroOptions.pop('ANKmaxIter')
-aeroOptions.pop('ANKsecondordswitchtol')
-aeroOptions.pop('ANKcoupledswitchtol')
+# Remove this and go with defaults in new version of ADFLOW (January 2018 rev 2182)
+#aeroOptions.pop('ANKmaxIter')
+#aeroOptions.pop('ANKsecondordswitchtol')
+#aeroOptions.pop('ANKcoupledswitchtol')
 
 
 class AllocationGroup(Group):
@@ -289,8 +289,8 @@ new_aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                    'grad_scaler' : 10.,
                    'outputDirectory' : grid_dir,
                    'useanksolver' : True,
-                   'ankswitchtol' : .1,
-                   'ankcfllimit' : 50.0,
+                   #'ankswitchtol' : .1,
+                   #'ankcfllimit' : 50.0,
                    }
 
 new_meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
