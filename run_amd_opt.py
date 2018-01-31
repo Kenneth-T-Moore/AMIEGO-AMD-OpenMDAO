@@ -281,8 +281,17 @@ aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                'writevolumesolution' : True,
                'writetecplotsurfacesolution' : False,
                'grad_scaler' : 1e-1,
-               'outputDirectory' : grid_dir
+               'outputDirectory' : grid_dir,
+               'useanksolver' : True,
+               'ankswitchtol' : .1,
+               'ankcfllimit' : 50.0,
                }
+
+# Remove this and go with defaults in new version of ADFLOW
+aeroOptions.pop('ANKmaxIter')
+aeroOptions.pop('ANKsecondordswitchtol')
+aeroOptions.pop('ANKcoupledswitchtol')
+
 meshOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns'}
 
 record = True
