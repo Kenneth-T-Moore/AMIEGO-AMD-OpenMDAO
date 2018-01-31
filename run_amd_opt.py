@@ -288,7 +288,7 @@ new_aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                    'writetecplotsurfacesolution' : False,
                    'grad_scaler' : 10.,
                    'outputDirectory' : grid_dir,
-                   'useanksolver' : True,
+                   #'useanksolver' : True,
                    #'ankswitchtol' : .1,
                    #'ankcfllimit' : 50.0,
                    }
