@@ -1,0 +1,298 @@
+"""
+Run Amiego plus AMD
+"""
+import pickle
+import os
+
+import numpy as np
+
+from six import iteritems
+
+from openmdao.api import Problem, Group, IndepVarComp, NonlinearBlockGS, LinearBlockGS, ExecComp
+from openmdao.parallel_api import PETScVector
+
+from amd_om.design.utils.flight_conditions import get_flight_conditions
+from amd_om.mission_analysis.components.aerodynamics.rans_3d_data import get_aero_smt_model, get_rans_crm_wing
+from amd_om.mission_analysis.components.propulsion.b777_engine_data import get_prop_smt_model
+from amd_om.mission_analysis.multi_mission_group import MultiMissionGroup
+from amd_om.mission_analysis.utils.plot_utils import plot_single_mission_altitude, plot_single_mission_data
+from amd_om.utils.aircraft_data.CRM_full_scale import get_aircraft_data
+from amd_om.utils.recorder_setup import get_recorder
+
+from economy import Profit, RevenueManager
+from prob_11_2_updated import allocation_data
+from prob_11_2_general_allocation import general_allocation_data
+
+
+class AllocationGroup(Group):
+    """
+    Modified version of AllocationGroup that includes part of Revenuue Management.
+    """
+    def initialize(self):
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
+
+    def setup(self):
+        general_allocation_data = self.metadata['general_allocation_data']
+        allocation_data = self.metadata['allocation_data']
+
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
+        num_aircraft = num_existing_aircraft + num_new_aircraft
+
+        self.add_subsystem('profit_comp', Profit(general_allocation_data=general_allocation_data,
+                                                 allocation_data=allocation_data
+                                                 ), promotes=['*'])
+
+        # Add Constraints
+        self.add_constraint('g_aircraft_new',
+                            upper=1.0,
+                            vectorize_derivs=True,
+                            parallel_deriv_color='pdc:demand_constraint',
+        )
+
+        self.add_constraint('g_aircraft_exist',
+                            upper=1.0,
+                            vectorize_derivs=True,
+                            parallel_deriv_color='pdc:demand_constraint',
+        )
+
+        self.add_constraint('g_demand',
+                            upper=1.0,
+                            vectorize_derivs=True,
+                            parallel_deriv_color='pdc:demand_constraint',
+        )
+
+
+class AllocationMissionGroup(Group):
+
+    def initialize(self):
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
+
+        self.metadata.declare('ref_area_m2', default=10., types=np.ScalarType)
+        self.metadata.declare('Wac_1e6_N', default=1., types=np.ScalarType)
+        self.metadata.declare('Mach_mode', 'TAS', values=['TAS', 'EAS', 'IAS', 'constant'])
+
+        self.metadata.declare('propulsion_model')
+        self.metadata.declare('aerodynamics_model')
+
+        self.metadata.declare('initial_mission_vars', default=None, types=dict, allow_none=True)
+
+    def setup(self):
+        meta = self.metadata
+
+        general_allocation_data = meta['general_allocation_data']
+        allocation_data = meta['allocation_data']
+
+        ref_area_m2 = meta['ref_area_m2']
+        Wac_1e6_N = meta['Wac_1e6_N']
+        Mach_mode = meta['Mach_mode']
+
+        propulsion_model = meta['propulsion_model']
+        aerodynamics_model = meta['aerodynamics_model']
+
+        initial_mission_vars = meta['initial_mission_vars']
+
+        allocation_data = meta['allocation_data']
+
+        num_routes = allocation_data['num']
+        num_existing_aircraft = allocation_data['num_existing']
+        num_new_aircraft = allocation_data['num_new']
+        num_aircraft = num_existing_aircraft + num_new_aircraft
+
+        def get_ones_array(val):
+            return val * np.ones((num_routes, num_aircraft))
+
+        flt_day = get_ones_array(1e-2)
+
+        flt_day_lower = get_ones_array( 0.)
+        flt_day_upper = get_ones_array(0.)
+
+        seats = []
+        for key in allocation_data['names']:
+            seats.append(allocation_data['capacity', key])
+        seats = np.array(seats)
+
+        for ind_ac in range(num_aircraft):
+            aircraft_name = allocation_data['names'][ind_ac]
+            for ind_rt in range(num_routes):
+
+                # Zeroing out the planes that can't fly that far.
+                key = ('fuel_N', aircraft_name)
+                if key in allocation_data and allocation_data[key][ind_rt] > 1e12:
+                    flt_day[ind_rt, ind_ac] = 0.
+                    flt_day_lower[ind_rt, ind_ac] = 0.
+                    flt_day_upper[ind_rt, ind_ac] = 0.
+                else:
+                    # Setting the upper bound
+                    flt_day_upper[ind_rt, ind_ac] = np.ceil(allocation_data['demand'][ind_rt]/(0.8*seats[ind_ac]))
+
+        # Revenue Initial Conditions:
+        xC0_rev = 1.0e3*np.array([[ 4.3460,    1.3430,    1.7560,    0.7062,    3.6570,    0.6189,    1.3200,    1.3890,    0.9810,    2.4250,    1.9650],
+                                  [ 2.6318,    0.4475,    0.5851,    0.2357,    1.2197,    0.2159,    0.4400,    0.4629,    0.3269,    0.7980,    0.6416],
+                                  [ 6.0180,    1.1577,    1.5140,    0.6311,    3.1820,    0.7101,    1.1561,    1.2043,    0.8479,    2.1036,    1.6272],
+                                  [ 3.7277,    0.6471,    0.8467,    0.3331,    1.7368,    0.3450,    0.6442,    0.6730,    0.4673,    1.1667,    0.9138],
+                                  [ 0.3000,    3.1920,    4.1120,    2.2420,    1.2480,    0.3000,    0.7160,    1.8960,    2.2640,    0.4160,    0.4160]])
+
+        inputs_comp = IndepVarComp()
+        inputs_comp.add_output('flt_day', val=flt_day, shape=(num_routes, num_aircraft))
+        inputs_comp.add_output('revenue:x1', val=xC0_rev[0, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:y1', val=xC0_rev[1, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:x2', val=xC0_rev[2, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:y2', val=xC0_rev[3, :], shape=(num_routes, ))
+        inputs_comp.add_output('revenue:z1', val=xC0_rev[4, :], shape=(num_routes, ))
+
+        revenue_comp = RevenueManager(general_allocation_data=general_allocation_data,
+                                      allocation_data=allocation_data)
+
+        multi_mission_group = MultiMissionGroup(
+            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+            ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
+            propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+            initial_mission_vars=initial_mission_vars,
+        )
+
+        allocation_group = AllocationGroup(
+            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+        )
+
+        self.add_subsystem('inputs_comp', inputs_comp, promotes=['*'])
+        self.add_subsystem('revenue_comp', revenue_comp, promotes=['*'])
+        self.add_subsystem('multi_mission_group', multi_mission_group, promotes=['*'])
+        self.add_subsystem('allocation_group', allocation_group, promotes=['*'])
+
+        for ind in range(allocation_data['num']):
+            self.connect(
+                'mission_{}.fuelburn_1e6_N'.format(ind),
+                '{}_fuelburn_1e6_N'.format(ind),
+            )
+            self.connect(
+                'mission_{}.blocktime_hr'.format(ind),
+                '{}_blocktime_hr'.format(ind),
+            )
+
+        demand_constraint = np.zeros((num_routes, num_aircraft))
+        for ind_ac in range(num_aircraft):
+            aircraft_name = allocation_data['names'][ind_ac]
+            for ind_rt in range(num_routes):
+                demand_constraint[ind_rt, ind_ac] = allocation_data['capacity', aircraft_name]
+
+        self.add_design_var('flt_day', lower=flt_day_lower, upper=flt_day_upper)
+        self.add_design_var('revenue:x1', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:y1', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:x2', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:y2', lower=0.0, ref=1.0e3)
+        self.add_design_var('revenue:z1', lower=0.0, ref=1.0e3)
+        self.add_objective('profit')
+
+
+class AllocationMissionDesignGroup(Group):
+
+    def initialize(self):
+        self.metadata.declare('flight_conditions', types=dict)
+        self.metadata.declare('aircraft_data', types=dict)
+
+        self.metadata.declare('general_allocation_data', types=dict)
+        self.metadata.declare('allocation_data', types=dict)
+
+        self.metadata.declare('ref_area_m2', default=10., types=np.ScalarType)
+        self.metadata.declare('Wac_1e6_N', default=1., types=np.ScalarType)
+        self.metadata.declare('Mach_mode', 'TAS', values=['TAS', 'EAS', 'IAS', 'constant'])
+
+        self.metadata.declare('propulsion_model')
+        self.metadata.declare('aerodynamics_model')
+
+        self.metadata.declare('initial_mission_vars', types=dict, allow_none=True)
+
+    def setup(self):
+        meta = self.metadata
+
+        flight_conditions = meta['flight_conditions']
+        aircraft_data = meta['aircraft_data']
+
+        general_allocation_data = meta['general_allocation_data']
+        allocation_data = meta['allocation_data']
+
+        ref_area_m2 = meta['ref_area_m2']
+        Wac_1e6_N = meta['Wac_1e6_N']
+        Mach_mode = meta['Mach_mode']
+
+        propulsion_model = meta['propulsion_model']
+        aerodynamics_model = meta['aerodynamics_model']
+
+        initial_mission_vars = meta['initial_mission_vars']
+
+        allocation_mission_group = AllocationMissionGroup(
+            general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+            ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
+            propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+            initial_mission_vars=initial_mission_vars,
+        )
+        self.add_subsystem('allocation_mission_group', allocation_mission_group, promotes=['*'])
+
+
+#-------------------------------------------------------------------------
+
+this_dir = os.path.split(__file__)[0]
+if not this_dir.endswith('/'):
+    this_dir += '/'
+
+flight_conditions = get_flight_conditions()
+initial_mission_vars = {}
+
+num_routes = allocation_data['num']
+for ind in range(num_routes):
+    optimum_mission_filename = './_mission_outputs/optimum_msn_{:03}.pkl'.format(ind)
+    optimum_mission_data = pickle.load(open(optimum_mission_filename, 'rb'))
+    #optimum_mission_data = pickle.load(open(os.path.join(this_dir, optimum_mission_filename), 'rb'))
+    for key in ['h_km_cp', 'M0']:
+        initial_mission_vars[ind, key] = optimum_mission_data[key]
+
+aircraft_data = get_aircraft_data()
+
+ref_area_m2 = aircraft_data['areaRef_m2']
+Wac_1e6_N = aircraft_data['Wac_1e6_N']
+Mach_mode = 'TAS'
+
+propulsion_model = get_prop_smt_model()
+aerodynamics_model = get_aero_smt_model()
+
+xt, yt, xlimits = get_rans_crm_wing()
+aerodynamics_model.xt = xt
+
+
+prob = Problem(model=AllocationMissionDesignGroup(flight_conditions=flight_conditions, aircraft_data=aircraft_data,
+                                                  general_allocation_data=general_allocation_data, allocation_data=allocation_data,
+                                                  ref_area_m2=ref_area_m2, Wac_1e6_N=Wac_1e6_N, Mach_mode=Mach_mode,
+                                                  propulsion_model=propulsion_model, aerodynamics_model=aerodynamics_model,
+                                                  initial_mission_vars=initial_mission_vars))
+
+
+prob.model.add_subsystem('p_CLt', IndepVarComp('CLt', np.zeros((36, ))), promotes=['*'])
+prob.model.add_subsystem('p_CDt', IndepVarComp('CDt', np.zeros((36, ))), promotes=['*'])
+
+prob.setup(vector_class=PETScVector)
+
+prob['CLt'] = np.array([ 0.27891953,  0.27740675,  0.50567129,  0.50411111,  0.67178486,  0.67072796,
+  0.20625611,  0.2048599,   0.45098623,  0.44937616,  0.65085738,  0.6492935,
+  0.12143678,  0.11953893,  0.39299682,  0.39062201,  0.63840812,  0.63517673,
+  0.12498458,  0.12133426,  0.38719886,  0.38262164,  0.63962429,  0.63352078,
+  0.12739122,  0.12252601,  0.38887416,  0.38271344,  0.65587936,  0.64779034,
+  0.13010178,  0.12376715,  0.40004596,  0.39172921,  0.67063932,  0.66241266])
+prob['CDt'] = np.array([ 0.01245633,  0.01265379,  0.02219869,  0.02234761,  0.04310465,  0.04315868,
+  0.01059043,  0.01074938,  0.01776348,  0.01788232,  0.03369645,  0.03376599,
+  0.00980034,  0.00998945,  0.01497374,  0.01511459,  0.02877744,  0.02887994,
+  0.00996479,  0.0103015,   0.01479722,  0.01504052,  0.02780155,  0.02791219,
+  0.01017521,  0.01059275,  0.01503608,  0.01532366,  0.02923256,  0.02926247,
+  0.01062982,  0.01110888,  0.01586912,  0.01614131,  0.03669549,  0.03639307])
+
+prob.run_model()
+
+print('CLt', prob['CLt'])
+print('CDt', prob['CDt'])
+prob.check_totals()
+
+
+
