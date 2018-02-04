@@ -148,4 +148,4 @@ class pyOptSparseWithScreening(pyOptSparseDriver):
                 if con[kk] > (1.0 + 1.0e-6): #New aircraft check within 1%, hoping optimizer can make it feasible
                     preopt_flag = False
 
-        return preopt_flag, profit/-1.0e3, cons
+        return preopt_flag, profit, cons
