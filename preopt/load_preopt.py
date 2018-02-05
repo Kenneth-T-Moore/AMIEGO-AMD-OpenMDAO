@@ -7,11 +7,10 @@ int_con = [	'allocation_mission_group.allocation_group.profit_comp.g_aircraft_ne
                    'allocation_mission_group.allocation_group.profit_comp.g_aircraft_exist',
                    'allocation_mission_group.allocation_group.profit_comp.g_demand']
 
-def parse_preopts():
+def parse_preopts(raw):
     """
     Read in points from saved run.
     """
-    raw = "raw"
     cons = {}
     lb = {}
     ub = {}
@@ -55,7 +54,7 @@ def parse_preopts():
 
     # Objective
     lines = lines[j+4:]
-    objs['profit'].append(float(lines[0].split()[1]))
+    objs['profit'].append(np.array(float(lines[0].split()[1])))
 
     # ----------------
     # Screened Preopts
@@ -69,7 +68,7 @@ def parse_preopts():
 
         # Profit is easy
         lines = lines[j:]
-        profit = float(lines[0].replace('profit [', '').replace(']', ''))
+        profit = np.array(float(lines[0].replace('profit [', '').replace(']', '')))
         objs['profit'].append(profit)
 
         # Cons are a mess
@@ -195,8 +194,8 @@ def check_surrogate(objs, cons, lb, ub):
     print('Penalized Profit (Y + sum((r_pen * P[ii] / num_vio[ii])))')
     print(Y)
 
-def load_all_preopts():
-    objs, old_cons, lb, ub = parse_preopts()
+def load_all_preopts(raw):
+    objs, old_cons, lb, ub = parse_preopts(raw)
 
     cons = {}
     for key in int_con:
@@ -213,6 +212,7 @@ if __name__ == "__main__":
     #objs, cons, lb, ub = parse_preopts()
     #check_surrogate(objs, cons, lb, ub)
 
-    obj, con, eflag = load_all_preopts()
+    raw = "raw"
+    obj, con, eflag = load_all_preopts(raw)
     print(obj, con, eflag)
     print('done')

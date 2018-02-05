@@ -364,7 +364,7 @@ for j in range(sample_data.shape[0]):
 prob.driver.sampling = {'flt_day' : xpose_sample}
 
 # Load preopt samples
-objs, cons, eflag = load_all_preopts()
+objs, cons, eflag = load_all_preopts('preopt/raw')
 prob.driver.con_sampling = cons
 prob.driver.obj_sampling = objs
 prob.driver.sampling_eflag = eflag
