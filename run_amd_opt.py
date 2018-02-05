@@ -27,6 +27,7 @@ from amiego_pre_opt import AMIEGO_With_Pre
 from economy import Profit, RevenueManager
 from prob_11_2_updated import allocation_data
 from prob_11_2_general_allocation import general_allocation_data
+from preopt.load_preopt import load_all_preopts
 from preopt_screen import pyOptSparseWithScreening
 
 
@@ -343,7 +344,7 @@ recorder_file_name = 'recorder_amd.db'
 
 prob.driver = AMIEGO_With_Pre()
 prob.driver.options['disp'] = True
-prob.driver.options['r_penalty'] = 10.0
+prob.driver.options['r_penalty'] = 2.0
 prob.driver.cont_opt = pyOptSparseWithScreening()
 prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
 prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-5
@@ -362,19 +363,12 @@ for j in range(sample_data.shape[0]):
     xpose_sample[j, :] = sample_data[j, :].reshape(3, 11).T.flatten()
 prob.driver.sampling = {'flt_day' : xpose_sample}
 
-# KEN - Setting up case recorders with this many vars takes forever.
-#system_includes = []
-#system_includes.append('design_group.concatenating_comp.CLt')
-#system_includes.append('design_group.concatenating_comp.CDt')
-#for ind in range(128):
-    #msn_name = 'allocation_mission_group.multi_mission_group.mission_{}'.format(ind)
-    #system_includes.append(msn_name + '.functionals.fuelburn_comp.fuelburn_1e6_N')
-    #system_includes.append(msn_name + '.functionals.blocktime_comp.blocktime_hr')
-    #system_includes.append(msn_name + '.bsplines.comp_x.x_1e3_km')
-    #system_includes.append(msn_name + '.bsplines.comp_h.h_km')
-    #system_includes.append(msn_name + '.atmos.mach_number_comp.M')
-    #system_includes.append(msn_name + '.sys_coupled_analysis.vertical_eom_comp.CL')
-    #system_includes.append(msn_name + '.sys_coupled_analysis.aero_comp.CD')
+# Load preopt samples
+objs, cons, eflag = load_all_preopts()
+prob.driver.con_sampling = cons
+prob.driver.obj_sampling = objs
+prob.driver.sampling_eflag = eflag
+prob.driver.int_con = list(cons.keys())
 
 if record:
     recorder = get_recorder(os.path.join(output_dir, recorder_file_name))
