@@ -54,7 +54,7 @@ def parse_preopts(raw):
 
     # Objective
     lines = lines[j+4:]
-    objs['profit'].append(np.array(float(lines[0].split()[1])))
+    objs['profit'].append(np.atleast_1d(float(lines[0].split()[1])))
 
     # ----------------
     # Screened Preopts
@@ -143,7 +143,7 @@ def check_surrogate(objs, cons, lb, ub):
 
     Y_mean = np.mean(obj_surr, axis=0)
     Y_std = np.std(obj_surr, axis=0)
-    #Y_std[Y_std == 0.] = 1.
+    Y_std[Y_std == 0.] = 1.
 
     #X = (x_i - X_mean) / X_std
     Y = (obj_surr - Y_mean) / Y_std
@@ -209,10 +209,10 @@ def load_all_preopts(raw):
 
 if __name__ == "__main__":
 
-    #objs, cons, lb, ub = parse_preopts()
-    #check_surrogate(objs, cons, lb, ub)
-
     raw = "raw"
+    objs, cons, lb, ub = parse_preopts(raw)
+    check_surrogate(objs, cons, lb, ub)
+
     obj, con, eflag = load_all_preopts(raw)
     print(obj, con, eflag)
     print('done')
