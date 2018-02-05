@@ -50,7 +50,7 @@ def parse_preopts(raw):
     # Turn lists into arrays:
     for name, val in iteritems(cons):
         cons[name] = []
-        cons[name].append(np.array(val))
+        cons[name].append(np.atleast_1d(val))
 
     # Objective
     lines = lines[j+4:]
@@ -68,7 +68,7 @@ def parse_preopts(raw):
 
         # Profit is easy
         lines = lines[j:]
-        profit = np.array(float(lines[0].replace('profit [', '').replace(']', '')))
+        profit = np.atleast_1d(float(lines[0].replace('profit [', '').replace(']', '')))
         objs['profit'].append(profit)
 
         # Cons are a mess
@@ -103,7 +103,7 @@ def parse_preopts(raw):
                     if current not in int_con:
                         continue
 
-                    cons[current].append(np.array(vals))
+                    cons[current].append(np.atleast_1d(vals))
                     current = None
                 else:
                     vals.append(float(word.replace(',', '')))
@@ -156,7 +156,7 @@ def check_surrogate(objs, cons, lb, ub):
         if name not in int_con:
             continue
 
-        val = np.array(val)
+        val = np.atleast_1d(val)
 
         meta = {}
 
