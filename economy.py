@@ -106,6 +106,10 @@ class RevenueManager(ExplicitComponent):
         self.add_output('revenue', shape=(num_routes, ))
         self.add_output('tot_pax', shape=(num_routes, ))
 
+        # These are used in the final comparison spreadsheet.
+        self.add_output('nacc', shape=(num_routes, 2))
+        self.add_output('p', shape=(num_routes, 2))
+
         # Derivs of everything wrt just the continuous vars.
         self.declare_partials(of='*', wrt='revenue*')
 
@@ -151,9 +155,13 @@ class RevenueManager(ExplicitComponent):
         tot_pax = np.empty((num_routes, ))
         for jj in range(num_routes):
             if max_avail_seats[jj] > 0:
-                rev_j, totnacc_j, _, _, _ = calc_revenue(x1[jj], y1[jj], x2[jj], y2[jj], z1[jj],
+                rev_j, totnacc_j, nacc, p, _ = calc_revenue(x1[jj], y1[jj], x2[jj], y2[jj], z1[jj],
                                                          alpha[jj, :], beta[jj, :],
                                                          max_avail_seats[jj])
+
+                outputs['nacc'][jj, :] = nacc
+                outputs['p'][jj, :] = p
+
                 rev[jj] = rev_j
                 for kk in range(num_ac):
                     x_kj = trip[jj, kk]
