@@ -460,7 +460,7 @@ prob.model.allocation_mission_group.revenue_comp.list_outputs()
 for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
     print(name, prob[name])
 
-run_model()
+prob.run_model()
 
 for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
     print(name, prob[name])
