@@ -345,74 +345,74 @@ prob['allocation_mission_group.flt_day'] = np.array([[ 0.,  0.,  0.,  0.,  4.,  
                                                      [ 5.,  2.,  1.,  8.,  2.,  0.,  0.,  0.,  1.,  0.,  0.]]).T
 
 
-prob['allocation_mission_group.inputs_comp.revenue:x1'] = array([4.346   , 1.343   , 1.756   , 0.706155, 3.657   , 0.618899,
+prob['allocation_mission_group.inputs_comp.revenue:x1'] = np.array([4.346   , 1.343   , 1.756   , 0.706155, 3.657   , 0.618899,
                                                            1.32    , 1.389   , 0.981   , 1.      , 1.965   ]) * 1.0e3
-prob['allocation_mission_group.inputs_comp.revenue:x2'] =  array([6.018   , 1.159146, 1.509376, 0.630516, 3.200992, 0.697066,
+prob['allocation_mission_group.inputs_comp.revenue:x2'] =  np.array([6.018   , 1.159146, 1.509376, 0.630516, 3.200992, 0.697066,
                                                            1.148846, 1.202317, 0.854041, 1.      , 1.7004  ]) * 1.0e3
-prob['allocation_mission_group.inputs_comp.revenue:y1'] =  array([2.6318  , 0.447763, 0.586488, 0.235803, 1.21878 , 0.210106,
+prob['allocation_mission_group.inputs_comp.revenue:y1'] =  np.array([2.6318  , 0.447763, 0.586488, 0.235803, 1.21878 , 0.210106,
                                                            0.441207, 0.463212, 0.327289, 0.809614, 0.674075]) * 1.0e3
-prob['allocation_mission_group.inputs_comp.revenue:y2'] =  array([3.7277  , 0.648142, 0.844902, 0.333115, 1.746825, 0.334863,
+prob['allocation_mission_group.inputs_comp.revenue:y2'] =  np.array([3.7277  , 0.648142, 0.844902, 0.333115, 1.746825, 0.334863,
                                                            0.641266, 0.672299, 0.470384, 1.      , 0.949216]) * 1.0e3
-prob['allocation_mission_group.inputs_comp.revenue:z1'] =  array([0.3  , 3.192, 4.112, 2.242, 1.248, 0.3  , 0.716, 1.896, 2.264,
+prob['allocation_mission_group.inputs_comp.revenue:z1'] =  np.array([0.3  , 3.192, 4.112, 2.242, 1.248, 0.3  , 0.716, 1.896, 2.264,
                                                            0.   , 0.416]) * 1.0e3
 
-prob['allocation_mission_group.multi_mission_group.mission_0.inputs_comp.M0'] =  array([0.864767])
-prob['allocation_mission_group.multi_mission_group.mission_0.inputs_comp.h_km_cp'] =  array([ 0.      , 10.35209 ,  9.637666,  9.801114,  9.731797,  9.740211,
+prob['allocation_mission_group.multi_mission_group.mission_0.inputs_comp.M0'] =  np.array([0.864767])
+prob['allocation_mission_group.multi_mission_group.mission_0.inputs_comp.h_km_cp'] =  np.array([ 0.      , 10.35209 ,  9.637666,  9.801114,  9.731797,  9.740211,
                                                                                        9.772475,  9.886949, 10.056549, 10.374795, 10.694507, 11.107989,
                                                                                        11.56719 , 11.743023, 12.014062, 12.059805, 12.300756, 12.993253,
                                                                                        2.845975,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_1.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_1.inputs_comp.h_km_cp'] =  array([ 0.      ,  2.283885,  9.517857, 11.718341, 11.471231, 11.710785,
+prob['allocation_mission_group.multi_mission_group.mission_1.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_1.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  2.283885,  9.517857, 11.718341, 11.471231, 11.710785,
                                                                                        11.696944, 11.810669, 11.862983, 11.954126, 12.010739, 12.107551,
                                                                                        12.123627, 12.282498, 12.119328, 12.894419,  7.384425,  3.297598,
                                                                                        0.801587,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_10.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_10.inputs_comp.h_km_cp'] =  array([ 0.      ,  4.170825, 12.040107, 10.151466, 11.027615, 10.816905,
+prob['allocation_mission_group.multi_mission_group.mission_10.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_10.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  4.170825, 12.040107, 10.151466, 11.027615, 10.816905,
                                                                                         11.136938, 11.292667, 11.50498 , 11.638173, 11.770906, 11.906197,
                                                                                         11.990738, 12.14617 , 12.12156 , 12.388267, 12.415673,  5.319076,
                                                                                         1.356266,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_2.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_2.inputs_comp.h_km_cp'] =  array([ 0.      ,  3.353327, 11.790421, 10.563483, 11.212765, 11.125226,
+prob['allocation_mission_group.multi_mission_group.mission_2.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_2.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  3.353327, 11.790421, 10.563483, 11.212765, 11.125226,
                                                                                        11.396441, 11.494415, 11.630118, 11.752858, 11.838323, 12.002917,
                                                                                        11.977072, 12.304558, 11.890665, 12.959723, 10.926817,  4.589707,
                                                                                        1.189852,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_3.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_3.inputs_comp.h_km_cp'] =  array([ 0.      ,  0.787903,  3.142244,  6.627033, 10.369104, 12.33404 ,
+prob['allocation_mission_group.multi_mission_group.mission_3.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_3.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  0.787903,  3.142244,  6.627033, 10.369104, 12.33404 ,
                                                                                        12.274079, 12.199388, 12.202051, 12.217892, 12.278023, 12.275476,
                                                                                        12.530899, 10.15307 ,  7.172636,  4.637384,  2.579766,  1.165995,
                                                                                        0.28254 ,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_4.inputs_comp.M0'] =  array([0.812785])
-prob['allocation_mission_group.multi_mission_group.mission_4.inputs_comp.h_km_cp'] =  array([ 0.      , 10.225185, 10.128901,  9.866376, 10.009642, 10.11874 ,
+prob['allocation_mission_group.multi_mission_group.mission_4.inputs_comp.M0'] =  np.array([0.812785])
+prob['allocation_mission_group.multi_mission_group.mission_4.inputs_comp.h_km_cp'] =  np.array([ 0.      , 10.225185, 10.128901,  9.866376, 10.009642, 10.11874 ,
                                                                                        10.341841, 10.502426, 10.753355, 11.008159, 11.285974, 11.495762,
                                                                                        11.733091, 11.784829, 12.156365, 11.840942, 12.801616, 11.372046,
                                                                                        2.050718,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_5.inputs_comp.M0'] =  array([0.794354])
-prob['allocation_mission_group.multi_mission_group.mission_5.inputs_comp.h_km_cp'] =  array([ 0.      ,  0.611311,  2.436084,  5.25891 ,  8.651973, 11.545441,
+prob['allocation_mission_group.multi_mission_group.mission_5.inputs_comp.M0'] =  np.array([0.794354])
+prob['allocation_mission_group.multi_mission_group.mission_5.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  0.611311,  2.436084,  5.25891 ,  8.651973, 11.545441,
                                                                                        13.      , 13.      , 13.      , 12.522009, 12.423754, 12.18452 ,
                                                                                        10.441155,  7.778668,  5.517168,  3.505772,  1.978987,  0.883465,
                                                                                        0.217615,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_6.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_6.inputs_comp.h_km_cp'] =  array([ 0.      ,  2.214417,  9.219706, 11.796524, 11.478158, 11.736811,
+prob['allocation_mission_group.multi_mission_group.mission_6.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_6.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  2.214417,  9.219706, 11.796524, 11.478158, 11.736811,
                                                                                        11.71098 , 11.826306, 11.876503, 11.961412, 12.026905, 12.099177,
                                                                                        12.159501, 12.225062, 12.248165, 12.643996,  7.200498,  3.222091,
                                                                                        0.781408,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_7.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_7.inputs_comp.h_km_cp'] =  array([ 0.      ,  2.414538, 10.050323, 11.546091, 11.465041, 11.652454,
+prob['allocation_mission_group.multi_mission_group.mission_7.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_7.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  2.414538, 10.050323, 11.546091, 11.465041, 11.652454,
                                                                                        11.670448, 11.776194, 11.837535, 11.933405, 11.988602, 12.102384,
                                                                                        12.093759, 12.312198, 12.036121, 13.      ,  7.88779 ,  3.409916,
                                                                                        0.860561,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_8.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_8.inputs_comp.h_km_cp'] =  array([ 0.      ,  1.408356,  5.629337, 10.625036, 12.187419, 11.842538,
+prob['allocation_mission_group.multi_mission_group.mission_8.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_8.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  1.408356,  5.629337, 10.625036, 12.187419, 11.842538,
                                                                                        12.030119, 11.99628 , 12.076433, 12.104098, 12.15642 , 12.200682,
                                                                                        12.232939, 12.303391, 12.48715 ,  8.171493,  4.632096,  2.042848,
                                                                                        0.504083,  0.      ])
-prob['allocation_mission_group.multi_mission_group.mission_9.inputs_comp.M0'] =  array([0.865])
-prob['allocation_mission_group.multi_mission_group.mission_9.inputs_comp.h_km_cp'] =  array([ 0.      ,  5.336129, 11.675169,  9.792977, 10.695585, 10.43858 ,
+prob['allocation_mission_group.multi_mission_group.mission_9.inputs_comp.M0'] =  np.array([0.865])
+prob['allocation_mission_group.multi_mission_group.mission_9.inputs_comp.h_km_cp'] =  np.array([ 0.      ,  5.336129, 11.675169,  9.792977, 10.695585, 10.43858 ,
                                                                                        10.818874, 10.901298, 11.211396, 11.45758 , 11.641887, 11.780121,
                                                                                        11.951703, 12.010029, 12.239684, 12.042562, 13.      ,  7.039611,
                                                                                        1.486823,  0.      ])
-prob['design_group.indep_var_comp.area'] =  array([0.108597]) * 10.0
-prob['design_group.indep_var_comp.shape'] =  array([-4.70340e-02,  7.43560e-02,  6.26410e-02,  9.51220e-02,
+prob['design_group.indep_var_comp.area'] =  np.array([0.108597]) * 10.0
+prob['design_group.indep_var_comp.shape'] =  np.array([-4.70340e-02,  7.43560e-02,  6.26410e-02,  9.51220e-02,
                                              5.59360e-02, -7.26530e-02,  7.37180e-02, -1.50831e-01,
                                              -7.86160e-02, -1.40746e-01, -1.28062e-01, -1.74740e-02,
                                              2.93040e-02, -1.30860e-02, -5.29100e-02, -1.02336e-01,
@@ -460,8 +460,8 @@ prob['design_group.indep_var_comp.shape'] =  array([-4.70340e-02,  7.43560e-02, 
                                              8.11820e-02, -6.15000e-03,  1.97970e-02,  5.88000e-03,
                                              -1.26290e-02, -9.17700e-03,  1.89410e-02, -5.12780e-02,
                                              -8.25450e-02, -1.27373e-01, -1.60407e-01, -1.56030e-01])
-prob['design_group.indep_var_comp.sweep'] =  array([-0.092868]) * 10.0
-prob['design_group.indep_var_comp.twist'] =  array([-0.031206,  0.004141, -0.005796,  0.000981, -0.000921,  0.0169  ,
+prob['design_group.indep_var_comp.sweep'] =  np.array([-0.092868]) * 10.0
+prob['design_group.indep_var_comp.twist'] =  np.array([-0.031206,  0.004141, -0.005796,  0.000981, -0.000921,  0.0169  ,
                                              -0.035491]) * 10.0
 
 prob.run_model()
