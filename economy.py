@@ -550,6 +550,9 @@ if __name__ == '__main__':
     model.add_design_var('revenue:y2')
     model.add_design_var('revenue:z1')
     model.add_objective('profit')
+    model.add_constraint('g_demand', upper=0.0)
+    model.add_constraint('g_aircraft_new', upper=0.0)
+    model.add_constraint('g_aircraft_exist', upper=0.0)
     prob.setup()
 
     prob.run()
