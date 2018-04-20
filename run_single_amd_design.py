@@ -438,8 +438,8 @@ print("Setup Complete")
 # Insert Optimal Design here
 
 prob['flt_day'] = np.array([[ 0.,  0.,  0.,  0.,  4.,  6.,  3.,  0.,  7.,  0.,  2.],
-                                                     [ 5.,  0.,  0.,  3.,  0.,  1.,  0.,  1.,  2.,  0.,  0.],
-                                                     [ 5.,  2.,  1.,  8.,  2.,  0.,  0.,  0.,  1.,  0.,  0.]]).T
+                            [ 5.,  0.,  0.,  3.,  0.,  1.,  0.,  1.,  2.,  0.,  0.],
+                            [ 5.,  2.,  1.,  8.,  2.,  0.,  0.,  0.,  1.,  0.,  0.]]).T
 
 
 prob['revenue:x1'] = np.array([4.346   , 1.343   , 1.756   , 0.706155, 3.657   , 0.618899,
@@ -450,13 +450,18 @@ prob['revenue:y1'] =  np.array([2.6318  , 0.447763, 0.586488, 0.235803, 1.21878 
                                                            0.441207, 0.463212, 0.327289, 0.809614, 0.674075]) * 1.0e3
 prob['revenue:y2'] =  np.array([3.7277  , 0.648142, 0.844902, 0.333115, 1.746825, 0.334863,
                                                            0.641266, 0.672299, 0.470384, 1.      , 0.949216]) * 1.0e3
-prob['revenue:z1'] =  np.array([0.3  , 3.192, 4.112, 2.242, 1.248, 0.3  , 0.716, 1.896, 2.264,
-                                                           0.   , 0.416]) * 1.0e3
+prob['revenue:z1'] =  np.array([0.3  , 3.192, 4.112, 2.242, 1.248, 0.3  , 0.716, 1.896, 2.264, 0.   , 0.416]) * 1.0e3
 
 prob.run_model()
 
 prob.model.allocation_mission_group.allocation_group.profit_comp.list_outputs()
 prob.model.allocation_mission_group.revenue_comp.list_outputs()
 
-for name in ['costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
+for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
     print(name, prob[name])
+
+run_model()
+
+for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
+    print(name, prob[name])
+
