@@ -458,3 +458,5 @@ prob.run_model()
 prob.model.allocation_mission_group.allocation_group.profit_comp.list_outputs()
 prob.model.allocation_mission_group.revenue_comp.list_outputs()
 
+for name in ['costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
+    print(name, prob[name])
