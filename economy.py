@@ -285,6 +285,9 @@ class Profit(ExplicitComponent):
         self.add_input('tot_pax', shape=(num_routes, ))
         self.add_input('flt_day', shape=(num_routes, num_aircraft))
 
+        # These are used in the final comparison spreadsheet.
+        self.add_output('costs', shape=(num_routes, num_aircraft))
+
         # Fuelburn inputs
         for ind_nac in range(num_new_aircraft):
             for ind_rt in range(num_routes):
@@ -375,7 +378,9 @@ class Profit(ExplicitComponent):
                 #print('MH_FH_kj', MH_FH_kj)
                 #print('fuel_kj', fuel_kj)
                 #print('x_kj', x_kj)
-                cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+                flt_cost = (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+                outputs['costs'][jj, ind_nac] = flt_cost
+                cost += flt_cost
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
             g_aircraft_new[ind_nac] = (con_val/(12.0*allocation_data['number', name]))
@@ -412,7 +417,11 @@ class Profit(ExplicitComponent):
                 #print('BH_kj', BH_kj)
                 #print('MH_FH_kj', MH_FH_kj)
                 #print('fuel_kj', fuel_kj)
-                cost += (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+
+                flt_cost = (cost_kj + fuel_kj*cost_fuel_N)*x_kj
+                outputs['costs'][jj, ind_nac + 1 + ind_ac] = flt_cost
+                cost += flt_cost
+
                 con_val += x_kj*(BH_kj*(1.0 + MH_FH_kj) + 1.0)
 
             g_aircraft_exist[ind_ac] = (con_val/(12.0*allocation_data['number', name]))
