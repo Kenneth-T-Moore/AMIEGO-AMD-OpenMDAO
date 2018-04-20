@@ -285,7 +285,7 @@ flight_conditions = get_flight_conditions()
 
 new_aeroOptions = {'gridFile' : '../Plugins/amd_om/grids/L3_myscaled.cgns',
                    'writesurfacesolution' : False,
-                   'writevolumesolution' : True,
+                   'writevolumesolution' : False,
                    'writetecplotsurfacesolution' : False,
                    'grad_scaler' : 10.,
                    'outputDirectory' : grid_dir,
@@ -344,7 +344,7 @@ recorder_file_name = 'recorder_amd.db'
 
 prob.driver = AMIEGO_With_Pre()
 prob.driver.options['disp'] = True
-prob.driver.options['r_penalty'] = 2.0
+prob.driver.options['r_penalty'] = 1.0
 prob.driver.cont_opt = pyOptSparseWithScreening()
 prob.driver.cont_opt.options['optimizer'] = 'SNOPT'
 prob.driver.cont_opt.opt_settings['Major optimality tolerance'] = 1e-5
