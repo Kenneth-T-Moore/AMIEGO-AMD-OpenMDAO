@@ -437,6 +437,9 @@ print("Setup Complete")
 
 # Insert Optimal Design here
 
+for key, value in iteritems(initial_dvs):
+    prob[key] = value
+
 prob['flt_day'] = np.array([[ 0.,  0.,  0.,  0.,  4.,  6.,  3.,  0.,  7.,  0.,  2.],
                             [ 5.,  0.,  0.,  3.,  0.,  1.,  0.,  1.,  2.,  0.,  0.],
                             [ 5.,  2.,  1.,  8.,  2.,  0.,  0.,  0.,  1.,  0.,  0.]]).T
@@ -460,9 +463,5 @@ prob.model.allocation_mission_group.revenue_comp.list_outputs()
 for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
     print(name, prob[name])
 
-prob.run_model()
-
-for name in ['flt_day', 'revenue:x1', 'revenue:x2', 'revenue:y1', 'revenue:y2', 'revenue:z1', 'costs', 'revenue', 'tot_pax', 'pax_flt', 'nacc', 'p', 'profit']:
-    print(name, prob[name])
 
 print(prob.driver.get_design_var_values())
