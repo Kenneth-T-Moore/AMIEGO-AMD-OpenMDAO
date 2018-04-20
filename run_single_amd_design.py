@@ -123,7 +123,7 @@ class AllocationMissionGroup(Group):
         seats = np.array(seats)
 
         for ind_ac in range(num_aircraft):
-            aircraft_name =   ['names'][ind_ac]
+            aircraft_name =  allocation_data['names'][ind_ac]
             for ind_rt in range(num_routes):
 
                 # Zeroing out the planes that can't fly that far.
