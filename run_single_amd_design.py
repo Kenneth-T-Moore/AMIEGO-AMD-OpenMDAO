@@ -440,7 +440,7 @@ print("Setup Complete")
 for key, value in iteritems(initial_dvs):
     prob[key] = value
 
-prob['flt_day'] = array([[ 1.,  0.,  0.],
+prob['flt_day'] = np.array([[ 1.,  0.,  0.],
        [ 0., 12.,  3.],
        [ 4.,  0.,  7.],
        [ 0.,  1.,  5.],
