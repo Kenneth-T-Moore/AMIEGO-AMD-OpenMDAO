@@ -492,14 +492,9 @@ raw = """
 import pprint
 
 lines = raw.split('\n')
-#with open('preopt/raw', 'r') as f:
-#    lines = f.readlines()
 
 data = {}
-for line in lines[6:]:
-
-    if line.strip().startswith('Constraints'):
-	break
+for line in lines:
 
     if len(line) < 2:
 	continue
